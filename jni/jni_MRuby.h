@@ -229,7 +229,7 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1checkToInteger
  * Signature: (JJ)I
  */
 JNIEXPORT jint JNICALL Java_org_jamruby_mruby_MRuby_n_1objRespondTo
-  (JNIEnv *, jclass, jlong, jlong);
+  (JNIEnv *, jclass, jlong, jlong, jlong);
 
 /*
  * Class:     org_jamruby_mruby_MRuby
@@ -591,6 +591,13 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1init_1JNI_1module
 JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1cleanup_1JNI_1module
   (JNIEnv *, jclass, jlong, jlong);
 
+/*
+ * Class:     org_jamruby_mruby_MRuby
+ * Method:    n_loadString
+ * Signature: (JLjava/lang/String;)Lorg/jamruby/mruby/Value;
+ */
+JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1loadString
+  (JNIEnv *env, jclass clazz, jlong mrb, jstring code);
 #ifdef __cplusplus
 }
 #endif

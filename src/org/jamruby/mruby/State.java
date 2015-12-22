@@ -39,6 +39,7 @@ public class State {
 		return new RObject(n_getExc(nativeObject()));
 	}
 	
+	/*
 	public Irep[] irep() {
 		if (null == ireps) {
 			synchronized(this) {
@@ -48,9 +49,9 @@ public class State {
 			}
 		}
 		return ireps;
-	}
+	}*/
 	
-	private static native Irep[] n_getIreps(long ptr);
+	//private static native Irep[] n_getIreps(long ptr);
 	private static native long n_getExc(long ptr);
 	private static native void n_close(long ptr);
 }

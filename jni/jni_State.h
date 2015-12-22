@@ -31,6 +31,8 @@ JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_State_n_1getExc
 JNIEXPORT void JNICALL Java_org_jamruby_mruby_State_n_1close
   (JNIEnv *, jclass, jlong);
 
+
+
 #ifdef __cplusplus
 }
 #endif

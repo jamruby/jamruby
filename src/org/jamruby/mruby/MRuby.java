@@ -14,6 +14,9 @@ import org.jamruby.io.FileDescriptorHelper;
 
 
 public class MRuby {
+	public static Value loadString(State state, String code) {
+		return n_loadString(state.nativeObject(), code);
+	}
 	public static int loadIrep(State state, File f) throws FileNotFoundException {
 		return n_loadIrep(state.nativeObject(), f.getAbsolutePath());
 	}
@@ -437,7 +440,7 @@ public class MRuby {
 	private static native void n_defineAlias(long mrb, long c, String name1, String name2);
 	private static native String n_className(long mrb, long c);
 	private static native void n_defineGlobalConst(long mrb, String name, Value value);
-	
+	private static native Value n_loadString(long ptr, String code);	
 	private static native void n_init_JNI_module(long mrb, long threadId);
 	static native void n_cleanup_JNI_module(long mrb, long threadId);
 	

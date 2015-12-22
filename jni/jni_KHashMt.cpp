@@ -7,7 +7,7 @@ extern "C" {
 #include "mruby/khash.h"
 #include "mruby/proc.h"
 }
-
+#define MRBSTATE(mrb) to_ptr<mrb_state>(mrb)
 typedef uint32_t kh_mt_key;
 
 inline kh_mt_key to_key(jlong key) {
@@ -20,10 +20,10 @@ inline kh_mt_key to_key(jlong key) {
  * Signature: (JJ)Z
  */
 JNIEXPORT jboolean JNICALL Java_org_jamruby_mruby_KHashMt_n_1khExist
-  (JNIEnv *env, jclass, jlong kh, jlong key)
+  (JNIEnv *env, jclass, jlong mrb, jlong kh, jlong key)
 {
 	kh_mt * const h = to_ptr<kh_mt>(kh);
-	khint_t k = kh_get(mt, h, to_key(key));
+	khint_t k = kh_get(mt, MRBSTATE(mrb), h, to_key(key));
 	if (k == kh_end(h)) {
 		return JNI_FALSE;
 	}
@@ -36,10 +36,10 @@ JNIEXPORT jboolean JNICALL Java_org_jamruby_mruby_KHashMt_n_1khExist
  * Signature: (JJ)J
  */
 JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_KHashMt_n_1khGet
-  (JNIEnv *env, jclass, jlong kh, jlong key)
+  (JNIEnv *env, jclass, jlong mrb, jlong kh, jlong key)
 {
 	kh_mt * const h = to_ptr<kh_mt>(kh);
-	khint_t k = kh_get(mt, h, to_key(key));
+	khint_t k = kh_get(mt, MRBSTATE(mrb), h, to_key(key));
 	if (k == kh_end(h)) {
 		return to_jlong(NULL);
 	}
@@ -53,12 +53,12 @@ JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_KHashMt_n_1khGet
  * Signature: (JJJ)V
  */
 JNIEXPORT void JNICALL Java_org_jamruby_mruby_KHashMt_n_1khPut
-  (JNIEnv *env, jclass, jlong kh, jlong key, jlong value)
+  (JNIEnv *env, jclass, jlong mrb, jlong kh, jlong key, jlong value)
 {
 	kh_mt * const h = to_ptr<kh_mt>(kh);
-	khint_t k = kh_get(mt, h, to_key(key));
+	khint_t k = kh_get(mt, MRBSTATE(mrb), h, to_key(key));
 	if (k == kh_end(h)) {
-		k = kh_put(mt, h, to_key(key));
+		k = kh_put(mt, MRBSTATE(mrb), h, to_key(key));
 	}
 	kh_value(h, k) = to_ptr<RProc>(value);
 }

@@ -42,7 +42,13 @@ public class Jamruby {
 			close();
 		}
 	}
+    
+    public Value loadString(String code) {
+		return MRuby.loadString(state, code);
+	}
+}
 	
+/*	
 	public Value run(String command, String...args) {
 		final int n = generateCode(MRuby.parse(state, command));
 		return run(n, args);
@@ -100,3 +106,5 @@ public class Jamruby {
 		return ret;
 	}
 }
+*/
+

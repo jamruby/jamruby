@@ -114,7 +114,7 @@ JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_RClass_n_1vmDefineModule
  * Class:     org_jamruby_mruby_RClass
  * Method:    n_defineMethodVm
  * Signature: (JJJLorg/jamruby/mruby/Value;)V
- */
+
 JNIEXPORT void JNICALL Java_org_jamruby_mruby_RClass_n_1defineMethodVm
   (JNIEnv *env, jclass, jlong mrb, jlong c, jlong mid, jobject body)
 {
@@ -124,6 +124,7 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_RClass_n_1defineMethodVm
 	}
 	mrb_define_method_vm(to_ptr<mrb_state>(mrb), to_ptr<RClass>(c), static_cast<mrb_sym>(mid), body_val);
 }
+*/
 
 /*
  * Class:     org_jamruby_mruby_RClass

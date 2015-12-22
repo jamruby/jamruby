@@ -232,12 +232,12 @@ int jcls_init_class(mrb_state *mrb)
 		return -1;
 	}
 	MRB_SET_INSTANCE_TT(cls_jcls, MRB_TT_DATA);
-	mrb_define_method(mrb, cls_jcls, "get_method", jcls_get_method, ARGS_REQ(2));
-	mrb_define_method(mrb, cls_jcls, "get_static_method", jcls_get_static_method, ARGS_REQ(2));
-	mrb_define_method(mrb, cls_jcls, "get_class_object", jcls_get_class_object, ARGS_NONE());
-	mrb_define_method(mrb, cls_jcls, "call_static", jcls_call_static, ARGS_REQ(1));
-	mrb_define_method(mrb, cls_jcls, "call", jcls_call, ARGS_REQ(2));
-	mrb_define_method(mrb, cls_jcls, "initialize", jcls_initialize, ARGS_REQ(1));
+	mrb_define_method(mrb, cls_jcls, "get_method", jcls_get_method, MRB_ARGS_REQ(2));
+	mrb_define_method(mrb, cls_jcls, "get_static_method", jcls_get_static_method, MRB_ARGS_REQ(2));
+	mrb_define_method(mrb, cls_jcls, "get_class_object", jcls_get_class_object, MRB_ARGS_NONE());
+	mrb_define_method(mrb, cls_jcls, "call_static", jcls_call_static, MRB_ARGS_REQ(1));
+	mrb_define_method(mrb, cls_jcls, "call", jcls_call, MRB_ARGS_REQ(2));
+	mrb_define_method(mrb, cls_jcls, "initialize", jcls_initialize, MRB_ARGS_REQ(1));
 	return 0;
 }
 

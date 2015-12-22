@@ -9,7 +9,7 @@ extern "C" {
  * Class:     org_jamruby_mruby_State
  * Method:    n_getIreps
  * Signature: (J)[Lorg/jamruby/mruby/Irep;
- */
+ 
 JNIEXPORT jobjectArray JNICALL Java_org_jamruby_mruby_State_n_1getIreps
   (JNIEnv *env, jclass clazz, jlong mrb)
 {
@@ -33,7 +33,8 @@ JNIEXPORT jobjectArray JNICALL Java_org_jamruby_mruby_State_n_1getIreps
 	}
 	return array.get();
 }
-
+*/
+ 
 /*
  * Class:     org_jamruby_mruby_State
  * Method:    n_getExc
@@ -57,4 +58,6 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_State_n_1close
 	mrb_close(reinterpret_cast<mrb_state*>(static_cast<intptr_t>(mrb)));
 	fflush(0);
 }
+
+
 

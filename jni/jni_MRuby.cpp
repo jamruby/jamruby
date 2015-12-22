@@ -12,6 +12,7 @@ extern "C" {
 #include "mruby/string.h"
 #include "mruby/class.h"
 }
+#include <unistd.h>
 #include <cstdio>
 #include <cerrno>
 #include <cstring>
@@ -190,7 +191,8 @@ JNIEXPORT jint JNICALL Java_org_jamruby_mruby_MRuby_n_1generateCode
   (JNIEnv *env, jclass clazz, jlong mrb, jlong parser_state)
 {
 	mrb_parser_state *pstate = to_ptr<mrb_parser_state>(parser_state);
-	return mrb_generate_code(MRBSTATE(mrb), pstate);
+	RProc *rproc = mrb_generate_code(MRBSTATE(mrb), pstate);
+	return static_cast<jlong>(reinterpret_cast<intptr_t>(rproc));
 }
 
 /*
@@ -459,9 +461,9 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1checkToInteger
  * Signature: (JJ)I
  */
 JNIEXPORT jint JNICALL Java_org_jamruby_mruby_MRuby_n_1objRespondTo
-  (JNIEnv *env, jclass, jlong c, jlong mid)
+  (JNIEnv *env, jclass, jlong mrb, jlong c, jlong mid)
 {
-	return mrb_obj_respond_to(to_ptr<RClass>(c), to_sym(mid));
+	return mrb_obj_respond_to(MRBSTATE(mrb), to_ptr<RClass>(c), to_sym(mid));
 }
 
 /*
@@ -509,7 +511,7 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1funcall
 	}
 
 	safe_jni::safe_string func_name(env, name);
-	mrb_value const &ret = mrb_funcall_argv(MRBSTATE(mrb), self_val, mrb_intern(MRBSTATE(mrb), func_name.string()), argc, values);
+	mrb_value const &ret = mrb_funcall_argv(MRBSTATE(mrb), self_val, mrb_intern_cstr(MRBSTATE(mrb), func_name.string()), argc, values);
 	delete[] values;
 	values = NULL;
 
@@ -540,7 +542,7 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1funcallWithBlock
 	}
 
 	safe_jni::safe_string func_name(env, name);
-	mrb_value const &ret = mrb_funcall_with_block(MRBSTATE(mrb), self_val, mrb_intern(MRBSTATE(mrb), func_name.string()), argc, values, block_val);
+	mrb_value const &ret = mrb_funcall_with_block(MRBSTATE(mrb), self_val, mrb_intern_cstr(MRBSTATE(mrb), func_name.string()), argc, values, block_val);
 	delete[] values;
 	values = NULL;
 
@@ -557,7 +559,7 @@ JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_MRuby_n_1intern
   (JNIEnv *env, jclass, jlong mrb, jstring name)
 {
 	safe_jni::safe_string symbol_name(env, name);
-	mrb_sym mid = mrb_intern(MRBSTATE(mrb), symbol_name.string());
+	mrb_sym mid = mrb_intern_cstr(MRBSTATE(mrb), symbol_name.string());
 	return static_cast<jlong>(mid);
 }
 
@@ -1186,7 +1188,7 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1init_1JNI_1module
 
 	RClass *mod_jni = mrb_define_module(MRBSTATE(mrb), "JAVA");
 	mrb_define_const(MRBSTATE(mrb), mod_jni, "JAVA_THREAD_ID", mrb_fixnum_value(threadId));
-	mrb_define_module_function(MRBSTATE(mrb), mod_jni, "find_class", java_find_class, ARGS_REQ(1));
+	mrb_define_module_function(MRBSTATE(mrb), mod_jni, "find_class", java_find_class, MRB_ARGS_REQ(1));
 
 	if (0 != jobject_init_class(MRBSTATE(mrb))) {
 		// TODO error handling
@@ -1203,15 +1205,16 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1init_1JNI_1module
 	if (0 != jthrowable_init_class(MRBSTATE(mrb))) {
 		// TODO error handling
 	}
-
-	RClass *clsKern = mrb_class_get(MRBSTATE(mrb), "Kernel");
+    LOGE("jam 1");
+	RClass *clsKern = mrb_class_get(MRBSTATE(mrb), "Object");
 	if (NULL != clsKern)
 	{
+		LOGE("jam 2");
 		RProc * const proc = replace_mrb_func(MRBSTATE(mrb), clsKern, "require", jamruby_kernel_require);
 		if (NULL != proc) {
 			mrb_gc_mark(MRBSTATE(mrb), reinterpret_cast<RBasic*>(proc));
 		} else {
-			mrb_define_module_function(MRBSTATE(mrb), clsKern, "require", jamruby_kernel_require, ARGS_REQ(1));
+			mrb_define_module_function(MRBSTATE(mrb), clsKern, "require", jamruby_kernel_require, MRB_ARGS_REQ(1));
 		}
 	}
 }
@@ -1228,3 +1231,17 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1cleanup_1JNI_1module
 	jamruby_context::unregister_context(MRBSTATE(mrb));
 }
 
+/*
+ * Class:     org_jamruby_mruby_MRuby
+ * Method:    n_loadString
+ * Signature: (JLjava/lang/String;)Lorg/jamruby/mruby/Value;
+ */
+JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1loadString
+  (JNIEnv *env, jclass clazz, jlong mrb, jstring code)
+{
+
+	safe_jni::safe_string script(env, code);
+	mrb_value ret = mrb_load_string(MRBSTATE(mrb), script.string());
+	safe_jni::safe_local_ref<jobject> vref(env, create_value(env, ret));
+	return vref.get();
+}

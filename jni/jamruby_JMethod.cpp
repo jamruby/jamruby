@@ -99,7 +99,7 @@ int jmethod_init_class(mrb_state *mrb)
 	if (NULL == cls) {
 		return -1;
 	}
-	mrb_define_method(mrb, cls, "initialize", jmethod_initialize, ARGS_REQ(1));
+	mrb_define_method(mrb, cls, "initialize", jmethod_initialize, MRB_ARGS_REQ(1));
 	return 0;
 }
 

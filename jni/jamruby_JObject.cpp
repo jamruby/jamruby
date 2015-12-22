@@ -169,10 +169,10 @@ int jobject_init_class(mrb_state *mrb)
 		return -1;
 	}
 	MRB_SET_INSTANCE_TT(cls_jobj, MRB_TT_DATA);
-	mrb_define_method(mrb, cls_jobj, "jclass",     jobject_jclass,     ARGS_NONE());
-	mrb_define_method(mrb, cls_jobj, "class",      jobject_class,      ARGS_NONE());
-	mrb_define_method(mrb, cls_jobj, "to_s",       jobject_to_s,       ARGS_NONE());
-	mrb_define_method(mrb, cls_jobj, "initialize", jobject_initialize, ARGS_ANY());
+	mrb_define_method(mrb, cls_jobj, "jclass",     jobject_jclass,     MRB_ARGS_NONE());
+	mrb_define_method(mrb, cls_jobj, "class",      jobject_class,      MRB_ARGS_NONE());
+	mrb_define_method(mrb, cls_jobj, "to_s",       jobject_to_s,       MRB_ARGS_NONE());
+	mrb_define_method(mrb, cls_jobj, "initialize", jobject_initialize, MRB_ARGS_ANY());
 	return 0;
 }
 

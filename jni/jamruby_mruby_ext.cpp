@@ -116,16 +116,16 @@ static void export_jclass(mrb_state *mrb, JNIEnv *env, jclass cls, std::string c
 		ofst = n + 1;
 
 		RClass *mod;
-		mrb_sym const sym = mrb_intern(mrb, mod_name.c_str());
+		mrb_sym const sym = mrb_intern_cstr(mrb, mod_name.c_str());
 		if (NULL == parent) {
-			if (mrb_const_defined_at(mrb, mrb->object_class, sym)) {
+			if (mrb_const_defined_at(mrb, mrb_obj_value(mrb->object_class), sym)) {
 				mod = mrb_class_get(mrb, mod_name.c_str());
 			} else {
 				LOGD("define module (%s)\n", mod_name.c_str());
 				mod = mrb_define_module(mrb, mod_name.c_str());
 			}
 		} else {
-			if (mrb_const_defined_at(mrb, parent, sym)) {
+			if (mrb_const_defined_at(mrb, mrb_obj_value(parent), sym)) {
 				mod = mrb_class_ptr(mrb_const_get(mrb, mrb_obj_value(parent), sym));
 			} else {
 				LOGD("define module (%s::%s)\n", mrb_string_value_ptr(mrb, mrb_class_path(mrb, parent)), mod_name.c_str());
@@ -144,7 +144,7 @@ static void export_jclass(mrb_state *mrb, JNIEnv *env, jclass cls, std::string c
 static bool is_method_defined(mrb_state *mrb, RClass *target, char const * const name)
 {
 	RClass *c = target;
-	RProc *proc = mrb_method_search_vm(mrb, &c, mrb_intern(mrb, name));
+	RProc *proc = mrb_method_search_vm(mrb, &c, mrb_intern_cstr(mrb, name));
 	if ((c == target) && (NULL != proc)) {
 		return true;
 	}
@@ -287,7 +287,7 @@ static void define_class(mrb_state *mrb, JNIEnv *env, RClass *parent, jclass cls
 			}
 
 			LOGD("define class method '%s::%s : %s'.", name.c_str(), mname_str.string(), signature.string());
-			mrb_define_class_method(mrb, target, mname_str.string(), java_class_method, ARGS_ANY());
+			mrb_define_class_method(mrb, target, mname_str.string(), java_class_method, MRB_ARGS_ANY());
 		} else {
 			context->register_method_signature(false, target, mname_str.string(), signature.string());
 			if (is_method_defined(mrb, target, mname_str.string())) {
@@ -296,7 +296,7 @@ static void define_class(mrb_state *mrb, JNIEnv *env, RClass *parent, jclass cls
 			}
 
 			LOGD("define instance method '%s.%s : %s'.", name.c_str(), mname_str.string(), signature.string());
-			mrb_define_method(mrb, target, mname_str.string(), java_object_method, ARGS_ANY());
+			mrb_define_method(mrb, target, mname_str.string(), java_object_method, MRB_ARGS_ANY());
 		}
 	}
 }
