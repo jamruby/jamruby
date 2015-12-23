@@ -1205,11 +1205,10 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1init_1JNI_1module
 	if (0 != jthrowable_init_class(MRBSTATE(mrb))) {
 		// TODO error handling
 	}
-    LOGE("jam 1");
+
 	RClass *clsKern = mrb_class_get(MRBSTATE(mrb), "Object");
 	if (NULL != clsKern)
 	{
-		LOGE("jam 2");
 		RProc * const proc = replace_mrb_func(MRBSTATE(mrb), clsKern, "require", jamruby_kernel_require);
 		if (NULL != proc) {
 			mrb_gc_mark(MRBSTATE(mrb), reinterpret_cast<RBasic*>(proc));
@@ -1243,5 +1242,6 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1loadString
 	safe_jni::safe_string script(env, code);
 	mrb_value ret = mrb_load_string(MRBSTATE(mrb), script.string());
 	safe_jni::safe_local_ref<jobject> vref(env, create_value(env, ret));
-	return vref.get();
+	jobject g = reinterpret_cast<jobject>(env->NewGlobalRef(vref.get()));
+	return g;
 }

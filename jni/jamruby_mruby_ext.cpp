@@ -119,7 +119,7 @@ static void export_jclass(mrb_state *mrb, JNIEnv *env, jclass cls, std::string c
 		mrb_sym const sym = mrb_intern_cstr(mrb, mod_name.c_str());
 		if (NULL == parent) {
 			if (mrb_const_defined_at(mrb, mrb_obj_value(mrb->object_class), sym)) {
-				mod = mrb_class_get(mrb, mod_name.c_str());
+				mod = mrb_module_get(mrb, mod_name.c_str());
 			} else {
 				LOGD("define module (%s)\n", mod_name.c_str());
 				mod = mrb_define_module(mrb, mod_name.c_str());

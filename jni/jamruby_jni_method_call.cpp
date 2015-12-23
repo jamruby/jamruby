@@ -509,14 +509,14 @@ bool is_mrb_value_convertible_to(mrb_state *mrb, mrb_value value, jni_type_t con
 		}
 		if (type.name() == "java/lang/String") {
 			return true;
-		}
+		}		
 		return false;
 	case MRB_TT_DATA:
 	case MRB_TT_OBJECT:
 		if (JNI_TYPE_OBJECT != type.type_id()) {
 			return false;
 		}
-		if (!jobject_is_jobject(mrb, value)) {
+		if (jobject_is_jobject(mrb, value)) {
 			return true;
 		}
 		return false;
