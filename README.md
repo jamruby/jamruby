@@ -1,7 +1,30 @@
 jamruby
 ====
 
-__jamruby__ is Java to mruby bridge.
+__jamruby__ is Java to mruby bridge.  
+Android applications can be scripted with Ruby!  
+
+Features
+----
+* Script in Ruby
+* Use .rb or .mrb (bytecode) files from storage
+* Threads (Uses mattn/mruby-thread)
+* Events
+* UI Access
+
+Sample
+----
+```ruby
+  java.import "android/widget/Button"
+
+  @b=java::Android::Widget::Button.new(activity)
+  @b.setText "Click Me!"  
+  @b.setOnClickListener() do
+    tst = toast "ouch!"
+  end
+
+  activity.setContentView @b
+```
 
 Requirements
 ----
