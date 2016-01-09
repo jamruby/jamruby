@@ -1,6 +1,14 @@
 MRuby::Build.new do |conf|
   # load specific toolchain settings
-  toolchain :gcc
+
+  # Gets set by the VS command prompts.
+  if ENV['VisualStudioVersion'] || ENV['VSINSTALLDIR']
+    toolchain :visualcpp
+  else
+    toolchain :gcc
+  end
+
+  enable_debug
 
   # Use mrbgems
   # conf.gem 'examples/mrbgems/ruby_extension_example'
@@ -8,12 +16,11 @@ MRuby::Build.new do |conf|
   #   g.cc.flags << '-g' # append cflags in this gem
   # end
   # conf.gem 'examples/mrbgems/c_and_ruby_extension_example'
-  # conf.gem :github => 'masuidrive/mrbgems-example', :branch => 'master'
+  # conf.gem :github => 'masuidrive/mrbgems-example', :checksum_hash => '76518e8aecd131d047378448ac8055fa29d974a9'
   # conf.gem :git => 'git@github.com:masuidrive/mrbgems-example.git', :branch => 'master', :options => '-v'
 
   # include the default GEMs
   conf.gembox 'default'
-
   # C compiler settings
   # conf.cc do |cc|
   #   cc.command = ENV['CC'] || 'gcc'
@@ -26,9 +33,9 @@ MRuby::Build.new do |conf|
   # end
 
   # mrbc settings
-  # conf.mrbc do |mrbc|
-  #   mrbc.compile_options = "-g -B%{funcname} -o-" # The -g option is required for line numbers
-  # end
+   conf.mrbc do |mrbc|
+     mrbc.compile_options = "-g -B%{funcname} -o-" # The -g option is required for line numbers
+   end
 
   # Linker settings
   # conf.linker do |linker|
@@ -70,34 +77,94 @@ MRuby::Build.new do |conf|
 
   # file separetor
   # conf.file_separator = '/'
+
+  # bintest
+  # conf.enable_bintest
+end
+
+MRuby::Build.new('host-debug') do |conf|
+  # load specific toolchain settings
+
+  # Gets set by the VS command prompts.
+  if ENV['VisualStudioVersion'] || ENV['VSINSTALLDIR']
+    toolchain :visualcpp
+  else
+    toolchain :gcc
+  end
+
+  enable_debug
+
+  # include the default GEMs
+  conf.gembox 'default'
+
+  # C compiler settings
+  conf.cc.defines = %w(MRB_ENABLE_DEBUG_HOOK)
+
+  # Generate mruby debugger command (require mruby-eval)
+  conf.gem :core => "mruby-bin-debugger"
+
+  # bintest
+  # conf.enable_bintest
+end
+
+MRuby::Build.new('test') do |conf|
+  # Gets set by the VS command prompts.
+  if ENV['VisualStudioVersion'] || ENV['VSINSTALLDIR']
+    toolchain :visualcpp
+  else
+    toolchain :gcc
+  end
+
+  enable_debug
+  conf.enable_bintest
+  conf.enable_test
+
+  conf.gembox 'default'
 end
 
 MRuby::CrossBuild.new('android-armeabi') do |conf|
   ENV['ANDROID_TARGET_ARCH'] = 'arm'
   ENV['ANDROID_TARGET_ARCH_ABI'] = 'armeabi'
 
-  toolchain :androideabi
+  conf.mrbc do |mrbc|
+    mrbc.compile_options = "-g -B%{funcname} -o-" # The -g option is required for line numbers
+  end
+
+  toolchain :android
 
   # if you want to use methods 'p', 'puts', enable one of mrbgem 'mruby-print'.
   conf.gem 'mrbgems/mruby-print'
-
+  conf.gem 'mrbgems/mruby-sprintf'
+  conf.gem 'mrbgems/mruby-compiler' 
+  conf.cc.flags << '-DHAVE_PTHREADS'
 end
+
 MRuby::CrossBuild.new('android-armeabi-v7a') do |conf|
   ENV['ANDROID_TARGET_ARCH_ABI'] = 'armeabi-v7a'
 
-  toolchain :androideabi
+  conf.mrbc do |mrbc|
+     mrbc.compile_options = "-g -B%{funcname} -o-" # The -g option is required for line numbers
+  end
 
-  # if you want to use methods 'p', 'puts', enable one of mrbgem 'mruby-print'.
+  toolchain :android
+
   conf.gem 'mrbgems/mruby-print'
-
+  conf.gem 'mrbgems/mruby-sprintf'
+  conf.gem 'mrbgems/mruby-compiler'
+  conf.cc.flags << '-DHAVE_PTHREADS'   
 end
+
 MRuby::CrossBuild.new('android-x86') do |conf|
   ENV['ANDROID_TARGET_ARCH'] = 'x86'
 
-  toolchain :androideabi
-
-  # if you want to use methods 'p', 'puts', enable one of mrbgem 'mruby-print'.
+  toolchain :android
+  
+  conf.mrbc do |mrbc|
+    mrbc.compile_options = "-g -B%{funcname} -o-" # The -g option is required for line numbers
+  end  
+  
   conf.gem 'mrbgems/mruby-print'
-
+  conf.gem 'mrbgems/mruby-sprintf'
+  conf.gem 'mrbgems/mruby-compiler'    
+  conf.cc.flags << '-DHAVE_PTHREADS' 
 end
-
