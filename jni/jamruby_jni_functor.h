@@ -16,41 +16,41 @@ public:
 		~jni_functor() {
 	}
 	jvalue operator () (jni_type_t const &type, JType obj, jmethodID jmid, jvalue *args) const {
-		JNIEnv *env = env_;
+		// JNIEnv *env = env_;
 		jvalue ret;
 		if (type.is_array()) {
-			ret.l = env->CallObjectMethodA(obj, jmid, args);
+			ret.l = getEnv()->CallObjectMethodA(obj, jmid, args);
 		} else {
 			switch(type.type_id()) {
 			case JNI_TYPE_VOID:
-				env->CallVoidMethodA(obj, jmid, args);
+				getEnv()->CallVoidMethodA(obj, jmid, args);
 				break;
 			case JNI_TYPE_BOOLEAN:
-				ret.z = env->CallBooleanMethodA(obj, jmid, args);
+				ret.z = getEnv()->CallBooleanMethodA(obj, jmid, args);
 				break;
 			case JNI_TYPE_BYTE:
-				ret.b = env->CallByteMethodA(obj, jmid, args);
+				ret.b = getEnv()->CallByteMethodA(obj, jmid, args);
 				break;
 			case JNI_TYPE_CHAR:
-				ret.c = env->CallCharMethodA(obj, jmid, args);
+				ret.c = getEnv()->CallCharMethodA(obj, jmid, args);
 				break;
 			case JNI_TYPE_SHORT:
-				ret.s = env->CallShortMethodA(obj, jmid, args);
+				ret.s = getEnv()->CallShortMethodA(obj, jmid, args);
 				break;
 			case JNI_TYPE_INT:
-				ret.i = env->CallIntMethodA(obj, jmid, args);
+				ret.i = getEnv()->CallIntMethodA(obj, jmid, args);
 				break;
 			case JNI_TYPE_LONG:
-				ret.j = env->CallLongMethodA(obj, jmid, args);
+				ret.j = getEnv()->CallLongMethodA(obj, jmid, args);
 				break;
 			case JNI_TYPE_FLOAT:
-				ret.f = env->CallFloatMethodA(obj, jmid, args);
+				ret.f = getEnv()->CallFloatMethodA(obj, jmid, args);
 				break;
 			case JNI_TYPE_DOUBLE:
-				ret.d = env->CallDoubleMethodA(obj, jmid, args);
+				ret.d = getEnv()->CallDoubleMethodA(obj, jmid, args);
 				break;
 			case JNI_TYPE_OBJECT:
-				ret.l = env->CallObjectMethodA(obj, jmid, args);
+				ret.l = getEnv()->CallObjectMethodA(obj, jmid, args);
 				break;
 			default:
 				// TODO handle error.
@@ -73,41 +73,41 @@ public:
 	~jni_functor() {
 	}
 	jvalue operator () (jni_type_t const &type, jclass cls, jmethodID jmid, jvalue *args) const {
-		JNIEnv *env = env_;
+		// JNIEnv *env = env_;
 		jvalue ret;
 		if (type.is_array()) {
-			ret.l = env->CallStaticObjectMethodA(cls, jmid, args);
+			ret.l = getEnv()->CallStaticObjectMethodA(cls, jmid, args);
 		} else {
 			switch (type.type_id()) {
 			case JNI_TYPE_VOID:
-				env->CallStaticVoidMethodA(cls, jmid, args);
+				getEnv()->CallStaticVoidMethodA(cls, jmid, args);
 				break;
 			case JNI_TYPE_BOOLEAN:
-				ret.z = env->CallStaticBooleanMethodA(cls, jmid, args);
+				ret.z = getEnv()->CallStaticBooleanMethodA(cls, jmid, args);
 				break;
 			case JNI_TYPE_BYTE:
-				ret.b = env->CallStaticByteMethodA(cls, jmid, args);
+				ret.b = getEnv()->CallStaticByteMethodA(cls, jmid, args);
 				break;
 			case JNI_TYPE_CHAR:
-				ret.c = env->CallStaticCharMethodA(cls, jmid, args);
+				ret.c = getEnv()->CallStaticCharMethodA(cls, jmid, args);
 				break;
 			case JNI_TYPE_SHORT:
-				ret.s = env->CallStaticShortMethodA(cls, jmid, args);
+				ret.s = getEnv()->CallStaticShortMethodA(cls, jmid, args);
 				break;
 			case JNI_TYPE_INT:
-				ret.i = env->CallStaticIntMethodA(cls, jmid, args);
+				ret.i = getEnv()->CallStaticIntMethodA(cls, jmid, args);
 				break;
 			case JNI_TYPE_LONG:
-				ret.j = env->CallStaticLongMethodA(cls, jmid, args);
+				ret.j = getEnv()->CallStaticLongMethodA(cls, jmid, args);
 				break;
 			case JNI_TYPE_FLOAT:
-				ret.f = env->CallStaticFloatMethodA(cls, jmid, args);
+				ret.f = getEnv()->CallStaticFloatMethodA(cls, jmid, args);
 				break;
 			case JNI_TYPE_DOUBLE:
-				ret.d = env->CallStaticDoubleMethodA(cls, jmid, args);
+				ret.d = getEnv()->CallStaticDoubleMethodA(cls, jmid, args);
 				break;
 			case JNI_TYPE_OBJECT:
-				ret.l = env->CallStaticObjectMethodA(cls, jmid, args);
+				ret.l = getEnv()->CallStaticObjectMethodA(cls, jmid, args);
 				break;
 			default:
 				// TODO handle error.

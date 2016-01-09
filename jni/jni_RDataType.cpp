@@ -18,7 +18,7 @@ JNIEXPORT jstring JNICALL Java_org_jamruby_mruby_RData_00024RDataType_n_1getName
 	if (NULL == t) {
 		return NULL;
 	}
-	safe_jni::safe_local_ref<jstring> name(env, env->NewStringUTF(t->struct_name));
+	safe_jni::safe_local_ref<jstring> name(getEnv(), getEnv()->NewStringUTF(t->struct_name));
 	return name.get();
 }
 

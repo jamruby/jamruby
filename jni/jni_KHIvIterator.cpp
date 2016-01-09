@@ -86,7 +86,7 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_KHashIv_00024KHIvIterator_n_1va
 	kh_iv const * const h = to_ptr<kh_iv>(kh);
 	khiter_t const k = static_cast<khiter_t>(iter);
 	mrb_value const &ret = kh_value(h, k);
-	safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
+	safe_jni::safe_local_ref<jobject> result(getEnv(), create_value(getEnv(), ret));
 	return result.get();
 }
 

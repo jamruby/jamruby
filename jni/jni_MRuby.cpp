@@ -1,5 +1,6 @@
 #include "jni_MRuby.h"
 #include "jni_Log.h"
+#include "jni_load.h"
 #include "safe_jni.hpp"
 #include "jni_type_conversion.hpp"
 #include "jni_common.hpp"
@@ -27,7 +28,7 @@ extern "C" {
 #include "jamruby_mruby_utils.h"
 
 #define MRBSTATE(mrb) to_ptr<mrb_state>(mrb)
-
+int jam_once=0;
 static inline mrb_sym to_sym(jlong &sym) {
 	return static_cast<mrb_sym>(sym);
 }
@@ -42,11 +43,11 @@ JNIEXPORT jint JNICALL Java_org_jamruby_mruby_MRuby_n_1redirect_1stdout
 {
 	int stdout_pipe[2] = { -1, -1 };
 	if (0 > pipe(stdout_pipe)) {
-		throw_exception(env, "java/io/IOException", "Can not create pipe.");
+		throw_exception(getEnv(), "java/io/IOException", "Can not create pipe.");
 		return -1;
 	}
 	if (0 > dup2(stdout_pipe[1], STDOUT_FILENO)) {
-		throw_exception(env, "java/io/IOException", "Can not duplicate file descriptor.");
+		throw_exception(getEnv(), "java/io/IOException", "Can not duplicate file descriptor.");
 		return -1;
 	}
 	(void)close(stdout_pipe[1]);
@@ -63,11 +64,11 @@ JNIEXPORT jint JNICALL Java_org_jamruby_mruby_MRuby_n_1redirect_1stderr
 {
 	int stderr_pipe[2] = { -1, -1 };
 	if (0 > pipe(stderr_pipe)) {
-		throw_exception(env, "java/io/IOException", "Can not create pipe.");
+		throw_exception(getEnv(), "java/io/IOException", "Can not create pipe.");
 		return -1;
 	}
 	if (0 > dup2(stderr_pipe[1], STDERR_FILENO)) {
-		throw_exception(env, "java/io/IOException", "Can not duplicate file descriptor.");
+		throw_exception(getEnv(), "java/io/IOException", "Can not duplicate file descriptor.");
 		return -1;
 	}
 	(void)close(stderr_pipe[1]);
@@ -84,11 +85,11 @@ JNIEXPORT jint JNICALL Java_org_jamruby_mruby_MRuby_n_1redirect_1stdin
 {
 	int stdin_pipe[2] = { -1, -1 };
 	if (0 > pipe(stdin_pipe)) {
-		throw_exception(env, "java/io/IOException", "Can not create pipe.");
+		throw_exception(getEnv(), "java/io/IOException", "Can not create pipe.");
 		return -1;
 	}
 	if (0 > dup2(stdin_pipe[0], STDIN_FILENO)) {
-		throw_exception(env, "java/io/IOException", "Can not duplicate file descriptor.");
+		throw_exception(getEnv(), "java/io/IOException", "Can not duplicate file descriptor.");
 		return -1;
 	}
 	(void)close(stdin_pipe[0]);
@@ -105,7 +106,7 @@ JNIEXPORT jint JNICALL Java_org_jamruby_mruby_MRuby_n_1loadIrep
 {
 	int n = -1;
 	try {
-		safe_jni::safe_string file_path(env, path);
+		safe_jni::safe_string file_path(getEnv(), path);
 		FILE *fp = fopen(file_path.string(), "rb");
 		mrb_value ret;
 		if (NULL == fp) {
@@ -114,7 +115,7 @@ JNIEXPORT jint JNICALL Java_org_jamruby_mruby_MRuby_n_1loadIrep
 		ret = mrb_load_irep_file(MRBSTATE(mrb), fp);
 		fclose(fp);
 	} catch (safe_jni::exception &e) {
-		throw_exception(env, e.java_exception_name(), e.message());
+		throw_exception(getEnv(), e.java_exception_name(), e.message());
 	}
 	return n;
 }
@@ -129,7 +130,7 @@ JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_MRuby_n_1parseString
 {
 	mrb_parser_state *state = NULL;
 	try {
-		safe_jni::safe_string command_line(env, command);
+		safe_jni::safe_string command_line(getEnv(), command);
 		size_t const length = command_line.length();
 		char *copy = new char[length + 1];
 		if (NULL == copy) {
@@ -146,7 +147,7 @@ JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_MRuby_n_1parseString
 		mrbc_context_free(MRBSTATE(mrb), ctx);
 		delete[] copy;
 	} catch (std::bad_alloc &e) {
-		throw_exception(env, "java/lang/OutOfMemoryError", "Insufficient memory.");
+		throw_exception(getEnv(), "java/lang/OutOfMemoryError", "Insufficient memory.");
 	}
 	return static_cast<jlong>(reinterpret_cast<intptr_t>(state));
 }
@@ -161,7 +162,7 @@ JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_MRuby_n_1parseFile
 {
 	mrb_parser_state *state = NULL;
 	try {
-		safe_jni::safe_string file_path(env, path);
+		safe_jni::safe_string file_path(getEnv(), path);
 		FILE *fp = fopen(file_path.string(), "r");
 		if (NULL == fp) {
 			throw safe_jni::file_not_found_exception(strerror(errno));
@@ -175,9 +176,9 @@ JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_MRuby_n_1parseFile
 		mrbc_context_free(MRBSTATE(mrb), ctx);
 		fclose(fp);
 	} catch (safe_jni::exception &e) {
-		throw_exception(env, e.java_exception_name(), e.message());
+		throw_exception(getEnv(), e.java_exception_name(), e.message());
 	} catch (std::bad_alloc& e) {
-		throw_exception(env, "java/lang/OutOfMemoryError", "Insufficient memory.");
+		throw_exception(getEnv(), "java/lang/OutOfMemoryError", "Insufficient memory.");
 	}
 	return static_cast<jlong>(reinterpret_cast<intptr_t>(state));
 }
@@ -204,7 +205,7 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1arrayNew
   (JNIEnv *env, jclass clazz, jlong mrb)
 {
 	mrb_value const &value = mrb_ary_new(MRBSTATE(mrb));
-	safe_jni::safe_local_ref<jobject> val(env, create_value(env, value));
+	safe_jni::safe_local_ref<jobject> val(getEnv(), create_value(getEnv(), value));
 	return val.get();
 }
 
@@ -217,11 +218,11 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1arrayPush
   (JNIEnv *env, jclass clazz, jlong mrb, jobject array, jobject elem)
 {
 	mrb_value varray = { { 0, } };
-	if (!create_mrb_value(env, array, varray)) {
+	if (!create_mrb_value(getEnv(), array, varray)) {
 		return;
 	}
 	mrb_value velem = { { 0, } };
-	if (!create_mrb_value(env, elem, velem)) {
+	if (!create_mrb_value(getEnv(), elem, velem)) {
 		return;
 	}
 	mrb_ary_push(MRBSTATE(mrb),	varray, velem);
@@ -247,7 +248,7 @@ JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_MRuby_n_1procNew
 JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_MRuby_n_1defineClass
   (JNIEnv *env, jclass, jlong mrb, jstring name, jlong superClass)
 {
-	safe_jni::safe_string class_name(env, name);
+	safe_jni::safe_string class_name(getEnv(), name);
 	RClass *cls = mrb_define_class(MRBSTATE(mrb), class_name.string(), to_ptr<RClass>(superClass));
 	return to_jlong(cls);
 }
@@ -260,7 +261,7 @@ JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_MRuby_n_1defineClass
 JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_MRuby_n_1defineModule
   (JNIEnv *env, jclass, jlong mrb, jstring name)
 {
-	safe_jni::safe_string module_name(env, name);
+	safe_jni::safe_string module_name(getEnv(), name);
 	RClass *mod = mrb_define_module(MRBSTATE(mrb), module_name.string());
 	return to_jlong(mod);
 }
@@ -274,11 +275,11 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1singletonClass
   (JNIEnv *env, jclass, jlong mrb, jobject value)
 {
 	mrb_value val;
-	if (!create_mrb_value(env, value, val)) {
+	if (!create_mrb_value(getEnv(), value, val)) {
 		return NULL;
 	}
 	mrb_value const &ret = mrb_singleton_class(MRBSTATE(mrb), val);
-	safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
+	safe_jni::safe_local_ref<jobject> result(getEnv(), create_value(getEnv(), ret));
 	return result.get();
 }
 
@@ -301,7 +302,7 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1includeModule
 JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1defineMethod
   (JNIEnv *env, jclass, jlong mrb, jlong c, jstring name, jobject func, jint aspec)
 {
-	throw_exception(env, "org/jamruby/exception/UnsupportedImplementationException", "Unsupported method.");
+	throw_exception(getEnv(), "org/jamruby/exception/UnsupportedImplementationException", "Unsupported method.");
 }
 
 /*
@@ -312,7 +313,7 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1defineMethod
 JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1defineClassMethod
   (JNIEnv *env, jclass, jlong, jlong, jstring, jobject, jint)
 {
-	throw_exception(env, "org/jamruby/exception/UnsupportedImplementationException", "Unsupported method.");
+	throw_exception(getEnv(), "org/jamruby/exception/UnsupportedImplementationException", "Unsupported method.");
 }
 
 /*
@@ -323,7 +324,7 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1defineClassMethod
 JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1defineSingletonMethod
   (JNIEnv *env, jclass, jlong, jlong, jstring, jobject, jint)
 {
-	throw_exception(env, "org/jamruby/exception/UnsupportedImplementationException", "Unsupported method.");
+	throw_exception(getEnv(), "org/jamruby/exception/UnsupportedImplementationException", "Unsupported method.");
 }
 
 /*
@@ -334,7 +335,7 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1defineSingletonMethod
 JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1defineModuleFunction
   (JNIEnv *env, jclass, jlong, jlong, jstring, jobject, jint)
 {
-	throw_exception(env, "org/jamruby/exception/UnsupportedImplementationException", "Unsupported method.");
+	throw_exception(getEnv(), "org/jamruby/exception/UnsupportedImplementationException", "Unsupported method.");
 }
 
 /*
@@ -345,9 +346,9 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1defineModuleFunction
 JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1defineConst
   (JNIEnv *env, jclass, jlong mrb, jlong c, jstring name, jobject value)
 {
-	safe_jni::safe_string value_name(env, name);
+	safe_jni::safe_string value_name(getEnv(), name);
 	mrb_value val;
-	if (!create_mrb_value(env, value, val)) {
+	if (!create_mrb_value(getEnv(), value, val)) {
 		return;
 	}
 	mrb_define_const(MRBSTATE(mrb), to_ptr<RClass>(c), value_name.string(), val);
@@ -362,11 +363,11 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1instanceNew
   (JNIEnv *env, jclass, jlong mrb, jobject cv)
 {
 	mrb_value val;
-	if (!create_mrb_value(env, cv, val)) {
+	if (!create_mrb_value(getEnv(), cv, val)) {
 		return NULL;
 	}
 	mrb_value const &ret = mrb_instance_new(MRBSTATE(mrb), val);
-	safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
+	safe_jni::safe_local_ref<jobject> result(getEnv(), create_value(getEnv(), ret));
 	return result.get();
 }
 
@@ -402,7 +403,7 @@ JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_MRuby_n_1moduleNew
 JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_MRuby_n_1classGet
   (JNIEnv *env, jclass, jlong mrb, jstring name)
 {
-	safe_jni::safe_string class_name(env, name);
+	safe_jni::safe_string class_name(getEnv(), name);
 	RClass *cls = mrb_class_get(MRBSTATE(mrb), class_name.string());
 	return to_jlong(cls);
 }
@@ -415,7 +416,7 @@ JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_MRuby_n_1classGet
 JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_MRuby_n_1classObjGet
   (JNIEnv *env, jclass, jlong mrb, jstring name)
 {
-	safe_jni::safe_string obj_name(env, name);
+	safe_jni::safe_string obj_name(getEnv(), name);
 	RClass *cls = mrb_class_get(MRBSTATE(mrb), obj_name.string());
 	return to_jlong(cls);
 }
@@ -429,11 +430,11 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1objDup
   (JNIEnv *env, jclass, jlong mrb, jobject obj)
 {
 	mrb_value val;
-	if (create_mrb_value(env, obj, val)) {
+	if (create_mrb_value(getEnv(), obj, val)) {
 		return NULL;
 	}
 	mrb_value const &ret = mrb_obj_dup(MRBSTATE(mrb), val);
-	safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
+	safe_jni::safe_local_ref<jobject> result(getEnv(), create_value(getEnv(), ret));
 	return result.get();
 }
 
@@ -446,12 +447,12 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1checkToInteger
   (JNIEnv *env, jclass, jlong mrb, jobject value, jstring method)
 {
 	mrb_value val;
-	if (!create_mrb_value(env, value ,val)) {
+	if (!create_mrb_value(getEnv(), value ,val)) {
 		return NULL;
 	}
-	safe_jni::safe_string method_name(env, method);
+	safe_jni::safe_string method_name(getEnv(), method);
 	mrb_value const &ret = mrb_check_to_integer(MRBSTATE(mrb), val, method_name.string());
-	safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
+	safe_jni::safe_local_ref<jobject> result(getEnv(), create_value(getEnv(), ret));
 	return result.get();
 }
 
@@ -474,7 +475,7 @@ JNIEXPORT jint JNICALL Java_org_jamruby_mruby_MRuby_n_1objRespondTo
 JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_MRuby_n_1defineClassUnder
   (JNIEnv *env, jclass, jlong mrb, jlong outer, jstring name, jlong superClass)
 {
-	safe_jni::safe_string class_name(env, name);
+	safe_jni::safe_string class_name(getEnv(), name);
 	RClass *cls = mrb_define_class_under(MRBSTATE(mrb), to_ptr<RClass>(outer), class_name.string(), to_ptr<RClass>(superClass));
 	return to_jlong(cls);
 }
@@ -487,7 +488,7 @@ JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_MRuby_n_1defineClassUnder
 JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_MRuby_n_1defineModuleUnder
   (JNIEnv *env, jclass, jlong mrb, jlong outer, jstring name)
 {
-	safe_jni::safe_string module_name(env, name);
+	safe_jni::safe_string module_name(getEnv(), name);
 	RClass *mod = mrb_define_module_under(MRBSTATE(mrb), to_ptr<RClass>(outer), module_name.string());
 	return to_jlong(mod);
 }
@@ -501,24 +502,59 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1funcall
   (JNIEnv *env, jclass, jlong mrb, jobject self, jstring name, jint argc, jobjectArray argv)
 {
 	mrb_value self_val;
-	if (!create_mrb_value(env, self, self_val)) {
+	if (!create_mrb_value(getEnv(), self, self_val)) {
 		return NULL;
 	}
 
-	mrb_value *values = create_mrb_value_array(env, argc, argv);
+	mrb_value *values = create_mrb_value_array(getEnv(), argc, argv);
 	if (NULL == values) {
 		return NULL;
 	}
 
-	safe_jni::safe_string func_name(env, name);
+	safe_jni::safe_string func_name(getEnv(), name);
+	
 	mrb_value const &ret = mrb_funcall_argv(MRBSTATE(mrb), self_val, mrb_intern_cstr(MRBSTATE(mrb), func_name.string()), argc, values);
+	
 	delete[] values;
-	values = NULL;
-
-	safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
+	values = NULL;	
+	
+    safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
 
 	return result.get();
 }
+
+
+/*
+ * Class:     org_jamruby_mruby_MRuby
+ * Method:    n_funcallArgv
+ * Signature: (JLorg/jamruby/mruby/Value;Ljava/lang/String;I[Lorg/jamruby/mruby/Value;)Lorg/jamruby/mruby/Value;
+ */
+JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1funcallArgv
+  (JNIEnv *env, jclass, jlong mrb, jobject self, jstring name, jint argc, jobjectArray argv)
+{
+	mrb_value self_val;
+	if (!create_mrb_value(getEnv(), self, self_val)) {
+		return NULL;
+	}
+
+	mrb_value *values = create_mrb_value_array(getEnv(), argc, argv);
+	if (NULL == values) {
+		return NULL;
+	}
+
+	safe_jni::safe_string func_name(getEnv(), name);
+	
+	mrb_value const &ret = mrb_funcall_argv(MRBSTATE(mrb), self_val, mrb_intern_cstr(MRBSTATE(mrb), func_name.string()), argc, values);
+
+	
+	delete[] values;
+	values = NULL;	
+	
+    safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
+
+	return result.get();
+}
+
 
 /*
  * Class:     org_jamruby_mruby_MRuby
@@ -529,24 +565,24 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1funcallWithBlock
   (JNIEnv *env, jclass, jlong mrb, jobject self, jstring name, jint argc, jobjectArray argv, jobject block)
 {
 	mrb_value self_val, block_val;
-	if (!create_mrb_value(env, self, self_val)) {
+	if (!create_mrb_value(getEnv(), self, self_val)) {
 		return NULL;
 	}
-	if (!create_mrb_value(env, block, block_val)) {
+	if (!create_mrb_value(getEnv(), block, block_val)) {
 		return NULL;
 	}
 
-	mrb_value *values = create_mrb_value_array(env, argc, argv);
+	mrb_value *values = create_mrb_value_array(getEnv(), argc, argv);
 	if (NULL == values) {
 		return NULL;
 	}
 
-	safe_jni::safe_string func_name(env, name);
+	safe_jni::safe_string func_name(getEnv(), name);
 	mrb_value const &ret = mrb_funcall_with_block(MRBSTATE(mrb), self_val, mrb_intern_cstr(MRBSTATE(mrb), func_name.string()), argc, values, block_val);
 	delete[] values;
 	values = NULL;
 
-	safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
+	safe_jni::safe_local_ref<jobject> result(getEnv(), create_value(getEnv(), ret));
 	return result.get();
 }
 
@@ -558,7 +594,7 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1funcallWithBlock
 JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_MRuby_n_1intern
   (JNIEnv *env, jclass, jlong mrb, jstring name)
 {
-	safe_jni::safe_string symbol_name(env, name);
+	safe_jni::safe_string symbol_name(getEnv(), name);
 	mrb_sym mid = mrb_intern_cstr(MRBSTATE(mrb), symbol_name.string());
 	return static_cast<jlong>(mid);
 }
@@ -571,7 +607,7 @@ JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_MRuby_n_1intern
 JNIEXPORT jstring JNICALL Java_org_jamruby_mruby_MRuby_n_1sym2name
   (JNIEnv *env, jclass clazz, jlong mrb, jlong sym)
 {
-	safe_jni::safe_local_ref<jstring> jstr(env, env->NewStringUTF(mrb_sym2name(MRBSTATE(mrb), to_sym(sym))));
+	safe_jni::safe_local_ref<jstring> jstr(getEnv(), getEnv()->NewStringUTF(mrb_sym2name(MRBSTATE(mrb), to_sym(sym))));
 	return jstr.get();
 }
 
@@ -584,7 +620,7 @@ JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_MRuby_n_1malloc
   (JNIEnv *env, jclass, jlong mrb, jlong size)
 {
 	if (0 < size) {
-		throw_exception(env, "java/lang/IllegalArgumentException", "'size' must be positive value.");
+		throw_exception(getEnv(), "java/lang/IllegalArgumentException", "'size' must be positive value.");
 		return to_jlong(NULL);
 	}
 	void *ptr = mrb_malloc(MRBSTATE(mrb), static_cast<size_t>(size));
@@ -640,15 +676,28 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1free
 
 /*
  * Class:     org_jamruby_mruby_MRuby
+ * Method:    n_nilValue
+ * Signature: ()Lorg/jamruby/mruby/Value;
+ */
+JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1nilValue
+  (JNIEnv *env, jclass clazz)
+{
+	mrb_value const &value = mrb_nil_value();
+	safe_jni::safe_local_ref<jobject> val(getEnv(), create_value(getEnv(), value));
+	return val.get();
+}
+
+/*
+ * Class:     org_jamruby_mruby_MRuby
  * Method:    n_strNew
  * Signature: (JLjava/lang/String;)Lorg/jamruby/mruby/Value;
  */
 JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1strNew
   (JNIEnv *env, jclass clazz, jlong mrb, jstring str)
 {
-	safe_jni::safe_string jstr(env, str);
+	safe_jni::safe_string jstr(getEnv(), str);
 	mrb_value const &value = mrb_str_new(MRBSTATE(mrb), jstr.string(), jstr.length());
-	safe_jni::safe_local_ref<jobject> val(env, create_value(env, value));
+	safe_jni::safe_local_ref<jobject> val(getEnv(), create_value(getEnv(), value));
 	return val.get();
 }
 
@@ -660,7 +709,9 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1strNew
 JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_MRuby_n_1open
   (JNIEnv *env, jclass clazz)
 {
-	return to_jlong(mrb_open());
+	mrb_state* mrb = mrb_open();
+	
+	return to_jlong(mrb);
 }
 
 /*
@@ -671,16 +722,16 @@ JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_MRuby_n_1open
 JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1topSelf
   (JNIEnv *env, jclass clazz, jlong mrb)
 {
-	safe_jni::safe_local_ref<jclass> vclazz(env, env->FindClass("org/jamruby/mruby/Value"));
+	safe_jni::safe_local_ref<jclass> vclazz(getEnv(), findClass("org/jamruby/mruby/Value"));
 	if (!vclazz) {
 		return NULL;
 	}
-	jmethodID ctor = env->GetMethodID(vclazz.get(), "<init>", "(IJ)V");
+	jmethodID ctor = getEnv()->GetMethodID(vclazz.get(), "<init>", "(IJ)V");
 	if (NULL == ctor) {
 		return NULL;
 	}
 	mrb_value const &value = mrb_top_self(MRBSTATE(mrb));
-	safe_jni::safe_local_ref<jobject> val(env, create_value(env, value)); 
+	safe_jni::safe_local_ref<jobject> val(getEnv(), create_value(getEnv(), value)); 
 	return val.get();
 }
 
@@ -693,11 +744,11 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1run
   (JNIEnv *env, jclass clazz, jlong mrb, jlong proc, jobject value)
 {
 	mrb_value val = { { 0, } };
-	if (!create_mrb_value(env, value, val)) {
+	if (!create_mrb_value(getEnv(), value, val)) {
 		return NULL;
 	}
 	mrb_value ret = mrb_run(MRBSTATE(mrb), to_ptr<RProc>(proc), val);
-	safe_jni::safe_local_ref<jobject> vref(env, create_value(env, ret));
+	safe_jni::safe_local_ref<jobject> vref(getEnv(), create_value(getEnv(), ret));
 	return vref.get();
 }
 
@@ -710,7 +761,7 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1p
   (JNIEnv *env, jclass clazz, jlong mrb, jobject value)
 {
 	mrb_value val = { { 0, } };
-	if (!create_mrb_value(env, value, val)) {
+	if (!create_mrb_value(getEnv(), value, val)) {
 		return;
 	}
 	mrb_p(MRBSTATE(mrb), val);
@@ -726,7 +777,7 @@ JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_MRuby_n_1toId
   (JNIEnv *env, jclass, jlong mrb, jobject name)
 {
 	mrb_value name_val;
-	if (!create_mrb_value(env, name, name_val)) {
+	if (!create_mrb_value(getEnv(), name, name_val)) {
 		return 0;
 	}
 	mrb_sym mid = mrb_obj_to_sym(MRBSTATE(mrb), name_val);
@@ -742,10 +793,10 @@ JNIEXPORT jint JNICALL Java_org_jamruby_mruby_MRuby_n_1objEqual
   (JNIEnv *env, jclass, jlong mrb, jobject left, jobject right)
 {
 	mrb_value left_val, right_val;
-	if (!create_mrb_value(env, left, left_val)) {
+	if (!create_mrb_value(getEnv(), left, left_val)) {
 		return 0;
 	}
-	if (!create_mrb_value(env, right, right_val)) {
+	if (!create_mrb_value(getEnv(), right, right_val)) {
 		return 0;
 	}
 	return mrb_obj_equal(MRBSTATE(mrb), left_val, right_val);
@@ -760,10 +811,10 @@ JNIEXPORT jint JNICALL Java_org_jamruby_mruby_MRuby_n_1equal
   (JNIEnv *env, jclass, jlong mrb, jobject left, jobject right)
 {
 	mrb_value left_val, right_val;
-	if (!create_mrb_value(env, left, left_val)) {
+	if (!create_mrb_value(getEnv(), left, left_val)) {
 		return 0;
 	}
-	if (!create_mrb_value(env, right, right_val)) {
+	if (!create_mrb_value(getEnv(), right, right_val)) {
 		return 0;
 	}
 	return mrb_equal(MRBSTATE(mrb), left_val, right_val);
@@ -778,11 +829,11 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1Integer
   (JNIEnv *env, jclass, jlong mrb, jobject value)
 {
 	mrb_value val;
-	if (!create_mrb_value(env, value, val)) {
+	if (!create_mrb_value(getEnv(), value, val)) {
 		return NULL;
 	}
 	mrb_value const &ret = mrb_Integer(MRBSTATE(mrb), val);
-	safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
+	safe_jni::safe_local_ref<jobject> result(getEnv(), create_value(getEnv(), ret));
 	return result.get();
 }
 
@@ -795,11 +846,11 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1Float
   (JNIEnv *env, jclass, jlong mrb, jobject value)
 {
 	mrb_value val;
-	if (!create_mrb_value(env, value, val)) {
+	if (!create_mrb_value(getEnv(), value, val)) {
 		return NULL;
 	}
 	mrb_value const &ret = mrb_Float(MRBSTATE(mrb), val);
-	safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
+	safe_jni::safe_local_ref<jobject> result(getEnv(), create_value(getEnv(), ret));
 	return result.get();
 }
 
@@ -812,11 +863,11 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1inspect
   (JNIEnv *env, jclass, jlong mrb, jobject value)
 {
 	mrb_value val;
-	if (!create_mrb_value(env, value, val)) {
+	if (!create_mrb_value(getEnv(), value, val)) {
 		return NULL;
 	}
 	mrb_value const &ret = mrb_inspect(MRBSTATE(mrb), val);
-	safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
+	safe_jni::safe_local_ref<jobject> result(getEnv(), create_value(getEnv(), ret));
 	return result.get();
 }
 
@@ -829,10 +880,10 @@ JNIEXPORT jint JNICALL Java_org_jamruby_mruby_MRuby_n_1eql
   (JNIEnv *env, jclass, jlong mrb, jobject left, jobject right)
 {
 	mrb_value left_val, right_val;
-	if (!create_mrb_value(env, left, left_val)) {
+	if (!create_mrb_value(getEnv(), left, left_val)) {
 		return 0;
 	}
-	if (!create_mrb_value(env, right, right_val)) {
+	if (!create_mrb_value(getEnv(), right, right_val)) {
 		return 0;
 	}
 	return mrb_eql(MRBSTATE(mrb), left_val, right_val);
@@ -847,13 +898,13 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1checkConvertType
   (JNIEnv *env, jclass, jlong mrb, jobject value, jint type, jstring tname, jstring method)
 {
 	mrb_value val;
-	if (!create_mrb_value(env, value, val)) {
+	if (!create_mrb_value(getEnv(), value, val)) {
 		return NULL;
 	}
-	safe_jni::safe_string type_name(env, tname);
-	safe_jni::safe_string method_name(env, method);
+	safe_jni::safe_string type_name(getEnv(), tname);
+	safe_jni::safe_string method_name(getEnv(), method);
 	mrb_value const &ret = mrb_check_convert_type(MRBSTATE(mrb), val, (mrb_vtype)type, type_name.string(), method_name.string());
-	safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
+	safe_jni::safe_local_ref<jobject> result(getEnv(), create_value(getEnv(), ret));
 	return result.get();
 }
 
@@ -866,11 +917,11 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1anyToS
   (JNIEnv *env, jclass, jlong mrb, jobject obj)
 {
 	mrb_value obj_val;
-	if (!create_mrb_value(env, obj, obj_val)) {
+	if (!create_mrb_value(getEnv(), obj, obj_val)) {
 		return NULL;
 	}
 	mrb_value const &ret = mrb_any_to_s(MRBSTATE(mrb), obj_val);
-	safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
+	safe_jni::safe_local_ref<jobject> result(getEnv(), create_value(getEnv(), ret));
 	return result.get();
 }
 
@@ -883,14 +934,14 @@ JNIEXPORT jstring JNICALL Java_org_jamruby_mruby_MRuby_n_1objClassname
   (JNIEnv *env, jclass, jlong mrb, jobject obj)
 {
 	mrb_value obj_val;
-	if (!create_mrb_value(env, obj, obj_val)) {
+	if (!create_mrb_value(getEnv(), obj, obj_val)) {
 		return NULL;
 	}
 	char const *name = mrb_obj_classname(MRBSTATE(mrb), obj_val);
 	if (NULL == name) {
 		return NULL;
 	}
-	safe_jni::safe_local_ref<jstring> class_name(env, env->NewStringUTF(name));
+	safe_jni::safe_local_ref<jstring> class_name(getEnv(), getEnv()->NewStringUTF(name));
 	return class_name.get();
 }
 
@@ -903,7 +954,7 @@ JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_MRuby_n_1objClass
   (JNIEnv *env, jclass, jlong mrb, jobject obj)
 {
 	mrb_value obj_val;
-	if (!create_mrb_value(env, obj, obj_val)) {
+	if (!create_mrb_value(getEnv(), obj, obj_val)) {
 		return to_jlong(NULL);
 	}
 	RClass *cls = mrb_obj_class(MRBSTATE(mrb), obj_val);
@@ -919,7 +970,7 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1classPath
   (JNIEnv *env, jclass, jlong mrb, jlong c)
 {
 	mrb_value const &ret = mrb_class_path(MRBSTATE(mrb), to_ptr<RClass>(c));
-	safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
+	safe_jni::safe_local_ref<jobject> result(getEnv(), create_value(getEnv(), ret));
 	return result.get();
 }
 
@@ -932,13 +983,13 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1convertType
   (JNIEnv *env, jclass, jlong mrb, jobject value, jint type, jstring tname, jstring method)
 {
 	mrb_value val;
-	if (!create_mrb_value(env, value, val)) {
+	if (!create_mrb_value(getEnv(), value, val)) {
 		return NULL;
 	}
-	safe_jni::safe_string type_name(env, tname);
-	safe_jni::safe_string method_name(env, method);
+	safe_jni::safe_string type_name(getEnv(), tname);
+	safe_jni::safe_string method_name(getEnv(), method);
 	mrb_value const &ret = mrb_convert_type(MRBSTATE(mrb), val, (mrb_vtype)type, type_name.string(), method_name.string());
-	safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
+	safe_jni::safe_local_ref<jobject> result(getEnv(), create_value(getEnv(), ret));
 	return result.get();
 }
 
@@ -951,7 +1002,7 @@ JNIEXPORT jint JNICALL Java_org_jamruby_mruby_MRuby_n_1objIsKindOf
   (JNIEnv *env, jclass, jlong mrb, jobject obj, jlong c)
 {
 	mrb_value val;
-	if (!create_mrb_value(env, obj, val)) {
+	if (!create_mrb_value(getEnv(), obj, val)) {
 		return -1;
 	}
 	return mrb_obj_is_kind_of(MRBSTATE(mrb), val, to_ptr<RClass>(c));
@@ -966,11 +1017,11 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1objInspect
   (JNIEnv *env, jclass, jlong mrb, jobject self)
 {
 	mrb_value self_val;
-	if (!create_mrb_value(env, self, self_val)) {
+	if (!create_mrb_value(getEnv(), self, self_val)) {
 		return NULL;
 	}
 	mrb_value const &ret = mrb_obj_inspect(MRBSTATE(mrb), self_val);
-	safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
+	safe_jni::safe_local_ref<jobject> result(getEnv(), create_value(getEnv(), ret));
 	return result.get();
 }
 
@@ -983,11 +1034,11 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1objClone
   (JNIEnv *env, jclass, jlong mrb, jobject self)
 {
 	mrb_value self_val;
-	if (!create_mrb_value(env, self, self_val)) {
+	if (!create_mrb_value(getEnv(), self, self_val)) {
 		return NULL;
 	}
 	mrb_value const &ret = mrb_obj_clone(MRBSTATE(mrb), self_val);
-	safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
+	safe_jni::safe_local_ref<jobject> result(getEnv(), create_value(getEnv(), ret));
 	return result.get();
 }
 
@@ -999,7 +1050,7 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1objClone
 JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1raise
   (JNIEnv *env, jclass, jlong mrb, jlong c, jstring msg)
 {
-	safe_jni::safe_string message(env, msg);
+	safe_jni::safe_string message(getEnv(), msg);
 	mrb_raise(MRBSTATE(mrb), to_ptr<RClass>(c), message.string());
 }
 
@@ -1011,7 +1062,7 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1raise
 JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1warn
   (JNIEnv *env, jclass, jlong mrb, jstring msg)
 {
-	safe_jni::safe_string message(env, msg);
+	safe_jni::safe_string message(getEnv(), msg);
 	mrb_warn(MRBSTATE(mrb), message.string());
 }
 
@@ -1023,7 +1074,7 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1warn
 JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1bug
   (JNIEnv *env, jclass, jlong mrb, jstring msg)
 {
-	safe_jni::safe_string message(env, msg);
+	safe_jni::safe_string message(getEnv(), msg);
 	mrb_bug(MRBSTATE(mrb), message.string());
 }
 
@@ -1036,14 +1087,14 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1yield
   (JNIEnv *env, jclass, jlong mrb, jobject value, jobject blk)
 {
 	mrb_value val, blk_val;
-	if (!create_mrb_value(env, value, val)) {
+	if (!create_mrb_value(getEnv(), value, val)) {
 		return NULL;
 	}
-	if (!create_mrb_value(env, blk, blk_val)) {
+	if (!create_mrb_value(getEnv(), blk, blk_val)) {
 		return NULL;
 	}
 	mrb_value const &ret = mrb_yield(MRBSTATE(mrb), val, blk_val);
-	safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
+	safe_jni::safe_local_ref<jobject> result(getEnv(), create_value(getEnv(), ret));
 	return result.get();
 }
 
@@ -1056,17 +1107,17 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1yieldArgv
   (JNIEnv *env, jclass, jlong mrb, jobject blk, jint argc, jobjectArray argv)
 {
 	mrb_value blk_val;
-	if (!create_mrb_value(env, blk, blk_val)) {
+	if (!create_mrb_value(getEnv(), blk, blk_val)) {
 		return NULL;
 	}
-	mrb_value *values = create_mrb_value_array(env, argc, argv);
+	mrb_value *values = create_mrb_value_array(getEnv(), argc, argv);
 	if (NULL == values) {
 		return NULL;
 	}
 	mrb_value const &ret = mrb_yield_argv(MRBSTATE(mrb), blk_val, argc, values);
 	delete[] values;
 	values = NULL;
-	safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
+	safe_jni::safe_local_ref<jobject> result(getEnv(), create_value(getEnv(), ret));
 	return result.get();
 }
 
@@ -1078,12 +1129,12 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1yieldArgv
 JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1classNewInstance
   (JNIEnv *env, jclass, jlong mrb, jint argc, jobjectArray argv, jlong c)
 {
-	mrb_value *values = create_mrb_value_array(env, argc, argv);
+	mrb_value *values = create_mrb_value_array(getEnv(), argc, argv);
 	if (NULL == values) {
 		return NULL;
 	}
 	mrb_value const &ret = mrb_class_new_instance(MRBSTATE(mrb), argc, values, to_ptr<RClass>(c));
-	safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
+	safe_jni::safe_local_ref<jobject> result(getEnv(), create_value(getEnv(), ret));
 	return result.get();
 }
 
@@ -1095,9 +1146,9 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1classNewInstance
 JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1objNew
   (JNIEnv *env, jclass, jlong mrb, jlong c, jint argc, jobjectArray argv)
 {
-	mrb_value *values = create_mrb_value_array(env, argc, argv);
+	mrb_value *values = create_mrb_value_array(getEnv(), argc, argv);
 	mrb_value const &ret = mrb_obj_new(MRBSTATE(mrb), to_ptr<RClass>(c), argc, values);
-	safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
+	safe_jni::safe_local_ref<jobject> result(getEnv(), create_value(getEnv(), ret));
 	delete[] values;
 	values = NULL;
 	return result.get();
@@ -1111,8 +1162,8 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1objNew
 JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1defineAlias
   (JNIEnv *env, jclass, jlong mrb, jlong c, jstring name1, jstring name2)
 {
-	safe_jni::safe_string n1(env, name1);
-	safe_jni::safe_string n2(env, name2);
+	safe_jni::safe_string n1(getEnv(), name1);
+	safe_jni::safe_string n2(getEnv(), name2);
 	mrb_define_alias(MRBSTATE(mrb), to_ptr<RClass>(c), n1.string(), n2.string());
 }
 
@@ -1125,7 +1176,7 @@ JNIEXPORT jstring JNICALL Java_org_jamruby_mruby_MRuby_n_1className
   (JNIEnv *env, jclass, jlong mrb, jlong c)
 {
 	char const *name = mrb_class_name(MRBSTATE(mrb), to_ptr<RClass>(c));
-	safe_jni::safe_local_ref<jstring> class_name(env, env->NewStringUTF(name));
+	safe_jni::safe_local_ref<jstring> class_name(getEnv(), getEnv()->NewStringUTF(name));
 	return class_name.get();
 }
 
@@ -1137,50 +1188,27 @@ JNIEXPORT jstring JNICALL Java_org_jamruby_mruby_MRuby_n_1className
 JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1defineGlobalConst
   (JNIEnv *env, jclass clazz, jlong mrb, jstring name, jobject value)
 {
-	safe_jni::safe_string vname(env, name);
+	safe_jni::safe_string vname(getEnv(), name);
 	mrb_value val = { { 0, } };
-	if (!create_mrb_value(env, value, val)) {
+	if (!create_mrb_value(getEnv(), value, val)) {
 		return;
 	}
 	mrb_define_global_const(MRBSTATE(mrb), vname.string(), val);
 }
 
-static mrb_value java_find_class(mrb_state *mrb, mrb_value self)
-{
-	using namespace org::jamruby;
-	jamruby_context *context = jamruby_context::find_context(mrb);
-	if (NULL == context) {
-		LOGE("cannot find jamruby context.");
-		return mrb_nil_value();
-	}
-
-	JNIEnv *env = context->get_jni_env();
-	if (NULL == env) {
-		LOGE("null environment.");
-		return mrb_nil_value();
-	}
-
-	mrb_value class_name;
-	int argc = mrb_get_args(mrb, "o", &class_name);
-	if (1 != argc) {
-		LOGE("invalid argument (argc = %d, %s).", argc, mrb_string_value_ptr(mrb, class_name));
-		return mrb_nil_value();
-	}
-
-	env->ExceptionClear();
-	return jcls_make(mrb, env, mrb_string_value_ptr(mrb, class_name));
-}
 
 /*
  * Class:     org_jamruby_mruby_MRuby
  * Method:    n_init_JNI_module
  * Signature: (JJ)V
  */
+ 
+
 JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1init_1JNI_1module
   (JNIEnv *env, jclass, jlong mrb, jlong threadId)
 {
 	using namespace org::jamruby;
-	jamruby_context *context = jamruby_context::register_context(MRBSTATE(mrb), env);
+	jamruby_context *context = jamruby_context::register_context(MRBSTATE(mrb), getEnv());
 	if (NULL == context) {
 		LOGE("cannot register jamruby context.");
 		return;
@@ -1216,6 +1244,9 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1init_1JNI_1module
 			mrb_define_module_function(MRBSTATE(mrb), clsKern, "require", jamruby_kernel_require, MRB_ARGS_REQ(1));
 		}
 	}
+	
+	
+	mrb_mruby_thread_init(MRBSTATE(mrb));
 }
 
 /*
@@ -1239,9 +1270,10 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1loadString
   (JNIEnv *env, jclass clazz, jlong mrb, jstring code)
 {
 
-	safe_jni::safe_string script(env, code);
+    //jam_once = 1;
+	safe_jni::safe_string script(getEnv(), code);
 	mrb_value ret = mrb_load_string(MRBSTATE(mrb), script.string());
-	safe_jni::safe_local_ref<jobject> vref(env, create_value(env, ret));
-	jobject g = reinterpret_cast<jobject>(env->NewGlobalRef(vref.get()));
+	safe_jni::safe_local_ref<jobject> vref(getEnv(), create_value(getEnv(), ret));
+	jobject g = reinterpret_cast<jobject>(getEnv()->NewGlobalRef(vref.get()));
 	return g;
 }

@@ -2,6 +2,8 @@
 #define SAFE_JNI_H
 
 #include "jni_exception.hpp"
+#include "jni_load.h"
+#include "jni_Log.h"
 #include <cstddef>
 
 namespace safe_jni {
@@ -18,15 +20,15 @@ public:
 	safe_array(JNIEnv *env, jarray const &array)
 		: env_(env), array_(array), ptr_(NULL), size_(0), is_copy_(false), is_aborted_(false) {
 		jboolean is_copy = JNI_FALSE;
-		ptr_  = static_cast<T*>(env->GetPrimitiveArrayCritical(array, &is_copy));
-		size_ = env->GetArrayLength(array);
+		ptr_  = static_cast<T*>(getEnv()->GetPrimitiveArrayCritical(array, &is_copy));
+		size_ = getEnv()->GetArrayLength(array);
 		is_copy_ = (JNI_FALSE == is_copy) ? false : true;
 	}
 	~safe_array() {
 		if (is_aborted_) {
-			env_->ReleasePrimitiveArrayCritical(array_, ptr_, JNI_ABORT);
+			getEnv()->ReleasePrimitiveArrayCritical(array_, ptr_, JNI_ABORT);
 		} else {
-			env_->ReleasePrimitiveArrayCritical(array_, ptr_, is_copy_ ? JNI_COMMIT : 0);
+			getEnv()->ReleasePrimitiveArrayCritical(array_, ptr_, is_copy_ ? JNI_COMMIT : 0);
 		}
 	}
 	T& operator[] (int const &index) {
@@ -69,7 +71,7 @@ private:
 public:
 	safe_object_array(JNIEnv *env, jobjectArray array)
 		: env_(env), array_(array) {
-		size_ = env->GetArrayLength(array);
+		size_ = getEnv()->GetArrayLength(array);
 	}
 	~safe_object_array() {
 	}
@@ -81,10 +83,10 @@ public:
 		if ((index < 0) || (static_cast<size_t>(index) > size_)) {
 			throw safe_jni::index_out_of_bounds_exception("Index out of bounds.");
 		}
-		return env_->GetObjectArrayElement(array_, index);
+		return getEnv()->GetObjectArrayElement(array_, index);
 	}
 	void set(int const &index, jobject item) {
-		env_->SetObjectArrayElement(array_, index, item);
+		getEnv()->SetObjectArrayElement(array_, index, item);
 	}
 	size_t size() const {
 		return size_;
@@ -100,7 +102,8 @@ public:
 		: env_(env), ref_(obj) {
 	}
 	~safe_local_ref() {
-		env_->DeleteLocalRef(ref_);
+		//LOGE("LOCAL UNREF");
+		getEnv()->DeleteLocalRef(ref_);
 	}
 	T get() const {
 		return ref_;
@@ -130,11 +133,11 @@ private:
 public:
 	safe_string(JNIEnv *env, jstring const &string)
 		: env_(env), ref_(string), string_(NULL) {
-		string_ = env->GetStringUTFChars(ref_, NULL);
+		string_ = getEnv()->GetStringUTFChars(ref_, NULL);
 	}
 	~safe_string() {
 		if (string_) {
-			env_->ReleaseStringUTFChars(ref_, string_);
+			getEnv()->ReleaseStringUTFChars(ref_, string_);
 			string_ = NULL;
 		}
 	}
@@ -142,7 +145,7 @@ public:
 		return string_;
 	}
 	size_t length() const {
-		return env_->GetStringUTFLength(ref_);
+		return getEnv()->GetStringUTFLength(ref_);
 	}
 	char const operator [] (int const &index) const {
 		return string_[index];
@@ -162,7 +165,7 @@ public:
 	}
 	~clear_exception() {
 		if (do_clear_) {
-			env_->ExceptionClear();
+			getEnv()->ExceptionClear();
 		}
 	}
 	void no_clear() {
@@ -180,12 +183,12 @@ private:
 public:
 	method(JNIEnv *env, jobject obj, char const * const name, char const * const sig)
 		: env_(env), mid_(NULL) {
-		safe_local_ref<jclass> cls(env, env->GetObjectClass(obj));
-		mid_ = env->GetMethodID(cls.get(), name, sig);
+		safe_local_ref<jclass> cls(getEnv(), getEnv()->GetObjectClass(obj));
+		mid_ = getEnv()->GetMethodID(cls.get(), name, sig);
 	}
 	method(JNIEnv *env, jclass cls, char const * const name, char const * const sig)
 		: env_(env), mid_(NULL) {
-		mid_ = env->GetStaticMethodID(cls, name, sig);
+		mid_ = getEnv()->GetStaticMethodID(cls, name, sig);
 	}
 	~method() {
 	}
@@ -198,14 +201,14 @@ public:
 	Ret_ operator () (jobject obj, ...) const {
 		va_list args;
 		va_start(args, obj);
-		jobject ret = env_->CallObjectMethodV(obj, mid_, args);
+		jobject ret = getEnv()->CallObjectMethodV(obj, mid_, args);
 		va_end(args);
 		return static_cast<Ret_>(ret);
 	}
 	Ret_ operator () (jclass cls, ...) const {
 		va_list args;
 		va_start(args, cls);
-		jobject ret = env_->CallStaticObjectMethodV(cls, mid_, args);
+		jobject ret = getEnv()->CallStaticObjectMethodV(cls, mid_, args);
 		va_end(args);
 		return static_cast<Ret_>(ret);
 	}
@@ -218,12 +221,12 @@ private:
 public:
 	method(JNIEnv *env, jobject obj, char const * const name, char const * const sig)
 		: env_(env), mid_(NULL) {
-		safe_local_ref<jclass> cls(env, env->GetObjectClass(obj));
-		mid_ = env->GetMethodID(cls.get(), name, sig);
+		safe_local_ref<jclass> cls(getEnv(), getEnv()->GetObjectClass(obj));
+		mid_ = getEnv()->GetMethodID(cls.get(), name, sig);
 	}
 	method(JNIEnv *env, jclass cls, char const * const name, char const * const sig)
 		: env_(env), mid_(NULL) {
-		mid_ = env->GetStaticMethodID(cls, name, sig);
+		mid_ = getEnv()->GetStaticMethodID(cls, name, sig);
 	}
 	~method() {
 	}
@@ -236,13 +239,13 @@ public:
 	void operator () (jobject obj, ...) const {
 		va_list args;
 		va_start(args, obj);
-		env_->CallVoidMethodV(obj, mid_, args);
+		getEnv()->CallVoidMethodV(obj, mid_, args);
 		va_end(args);
 	}
 	void operator () (jclass cls, ...) const {
 		va_list args;
 		va_start(args, cls);
-		env_->CallStaticVoidMethodV(cls, mid_, args);
+		getEnv()->CallStaticVoidMethodV(cls, mid_, args);
 		va_end(args);
 	}
 };
@@ -254,12 +257,12 @@ private:
 public:
 	method(JNIEnv *env, jobject obj, char const * const name, char const * const sig)
 		: env_(env), mid_(NULL) {
-		safe_local_ref<jclass> cls(env, env->GetObjectClass(obj));
-		mid_ = env->GetMethodID(cls.get(), name, sig);
+		safe_local_ref<jclass> cls(getEnv(), getEnv()->GetObjectClass(obj));
+		mid_ = getEnv()->GetMethodID(cls.get(), name, sig);
 	}
 	method(JNIEnv *env, jclass cls, char const * const name, char const * const sig)
 		: env_(env), mid_(NULL) {
-		mid_ = env->GetStaticMethodID(cls, name, sig);
+		mid_ = getEnv()->GetStaticMethodID(cls, name, sig);
 	}
 	~method() {
 	}
@@ -272,14 +275,14 @@ public:
 	int8_t operator () (jobject obj, ...) const {
 		va_list args;
 		va_start(args, obj);
-		int8_t ret = env_->CallByteMethodV(obj, mid_, args);
+		int8_t ret = getEnv()->CallByteMethodV(obj, mid_, args);
 		va_end(args);
 		return ret;
 	}
 	int8_t operator () (jclass cls, ...) const {
 		va_list args;
 		va_start(args, cls);
-		int8_t ret = env_->CallStaticByteMethodV(cls, mid_, args);
+		int8_t ret = getEnv()->CallStaticByteMethodV(cls, mid_, args);
 		va_end(args);
 		return ret;
 	}
@@ -292,12 +295,12 @@ private:
 public:
 	method(JNIEnv *env, jobject obj, char const * const name, char const * const sig)
 		: env_(env), mid_(NULL) {
-		safe_local_ref<jclass> cls(env, env->GetObjectClass(obj));
-		mid_ = env->GetMethodID(cls.get(), name, sig);
+		safe_local_ref<jclass> cls(getEnv(), getEnv()->GetObjectClass(obj));
+		mid_ = getEnv()->GetMethodID(cls.get(), name, sig);
 	}
 	method(JNIEnv *env, jclass cls, char const * const name, char const * const sig)
 		: env_(env), mid_(NULL) {
-		mid_ = env->GetStaticMethodID(cls, name, sig);
+		mid_ = getEnv()->GetStaticMethodID(cls, name, sig);
 	}
 	~method() {
 	}
@@ -310,14 +313,14 @@ public:
 	int16_t operator () (jobject obj, ...) const {
 		va_list args;
 		va_start(args, obj);
-		int16_t ret = env_->CallShortMethodV(obj, mid_, args);
+		int16_t ret = getEnv()->CallShortMethodV(obj, mid_, args);
 		va_end(args);
 		return ret;
 	}
 	int16_t operator () (jclass cls, ...) const {
 		va_list args;
 		va_start(args, cls);
-		int16_t ret = env_->CallStaticShortMethodV(cls, mid_, args);
+		int16_t ret = getEnv()->CallStaticShortMethodV(cls, mid_, args);
 		va_end(args);
 		return ret;
 	}
@@ -330,12 +333,12 @@ private:
 public:
 	method(JNIEnv *env, jobject obj, char const * const name, char const * const sig)
 		: env_(env), mid_(NULL) {
-		safe_local_ref<jclass> cls(env, env->GetObjectClass(obj));
-		mid_ = env->GetMethodID(cls.get(), name, sig);
+		safe_local_ref<jclass> cls(getEnv(), getEnv()->GetObjectClass(obj));
+		mid_ = getEnv()->GetMethodID(cls.get(), name, sig);
 	}
 	method(JNIEnv *env, jclass cls, char const * const name, char const * const sig)
 		: env_(env), mid_(NULL) {
-		mid_ = env->GetStaticMethodID(cls, name, sig);
+		mid_ = getEnv()->GetStaticMethodID(cls, name, sig);
 	}
 	~method() {
 	}
@@ -348,14 +351,14 @@ public:
 	uint16_t operator () (jobject obj, ...) const {
 		va_list args;
 		va_start(args, obj);
-		uint16_t ret = env_->CallCharMethodV(obj, mid_, args);
+		uint16_t ret = getEnv()->CallCharMethodV(obj, mid_, args);
 		va_end(args);
 		return ret;
 	}
 	uint16_t operator () (jclass cls, ...) const {
 		va_list args;
 		va_start(args, cls);
-		uint16_t ret = env_->CallStaticCharMethodV(cls, mid_, args);
+		uint16_t ret = getEnv()->CallStaticCharMethodV(cls, mid_, args);
 		va_end(args);
 		return ret;
 	}
@@ -368,12 +371,12 @@ private:
 public:
 	method(JNIEnv *env, jobject obj, char const * const name, char const * const sig)
 		: env_(env), mid_(NULL) {
-		safe_local_ref<jclass> cls(env, env->GetObjectClass(obj));
-		mid_ = env->GetMethodID(cls.get(), name, sig);
+		safe_local_ref<jclass> cls(getEnv(), getEnv()->GetObjectClass(obj));
+		mid_ = getEnv()->GetMethodID(cls.get(), name, sig);
 	}
 	method(JNIEnv *env, jclass cls, char const * const name, char const * const sig)
 		: env_(env), mid_(NULL) {
-		mid_ = env->GetStaticMethodID(cls, name, sig);
+		mid_ = getEnv()->GetStaticMethodID(cls, name, sig);
 	}
 	~method() {
 	}
@@ -386,14 +389,14 @@ public:
 	int32_t operator () (jobject obj, ...) const {
 		va_list args;
 		va_start(args, obj);
-		int32_t ret = env_->CallIntMethodV(obj, mid_, args);
+		int32_t ret = getEnv()->CallIntMethodV(obj, mid_, args);
 		va_end(args);
 		return ret;
 	}
 	int32_t operator () (jclass cls, ...) const {
 		va_list args;
 		va_start(args, cls);
-		int32_t ret = env_->CallStaticIntMethodV(cls, mid_, args);
+		int32_t ret = getEnv()->CallStaticIntMethodV(cls, mid_, args);
 		va_end(args);
 		return ret;
 	}
@@ -406,12 +409,12 @@ private:
 public:
 	method(JNIEnv *env, jobject obj, char const * const name, char const * const sig)
 		: env_(env), mid_(NULL) {
-		safe_local_ref<jclass> cls(env, env->GetObjectClass(obj));
-		mid_ = env->GetMethodID(cls.get(), name, sig);
+		safe_local_ref<jclass> cls(getEnv(), getEnv()->GetObjectClass(obj));
+		mid_ = getEnv()->GetMethodID(cls.get(), name, sig);
 	}
 	method(JNIEnv *env, jclass cls, char const * const name, char const * const sig)
 		: env_(env), mid_(NULL) {
-		mid_ = env->GetStaticMethodID(cls, name, sig);
+		mid_ = getEnv()->GetStaticMethodID(cls, name, sig);
 	}
 	~method() {
 	}
@@ -424,14 +427,14 @@ public:
 	int64_t operator () (jobject obj, ...) const {
 		va_list args;
 		va_start(args, obj);
-		int64_t ret = env_->CallLongMethodV(obj, mid_, args);
+		int64_t ret = getEnv()->CallLongMethodV(obj, mid_, args);
 		va_end(args);
 		return ret;
 	}
 	int64_t operator () (jclass cls, ...) const {
 		va_list args;
 		va_start(args, cls);
-		int64_t ret = env_->CallStaticLongMethodV(cls, mid_, args);
+		int64_t ret = getEnv()->CallStaticLongMethodV(cls, mid_, args);
 		va_end(args);
 		return ret;
 	}
@@ -444,12 +447,12 @@ private:
 public:
 	method(JNIEnv *env, jobject obj, char const * const name, char const * const sig)
 		: env_(env), mid_(NULL) {
-		safe_local_ref<jclass> cls(env, env->GetObjectClass(obj));
-		mid_ = env->GetMethodID(cls.get(), name, sig);
+		safe_local_ref<jclass> cls(getEnv(), getEnv()->GetObjectClass(obj));
+		mid_ = getEnv()->GetMethodID(cls.get(), name, sig);
 	}
 	method(JNIEnv *env, jclass cls, char const * const name, char const * const sig)
 		: env_(env), mid_(NULL) {
-		mid_ = env->GetStaticMethodID(cls, name, sig);
+		mid_ = getEnv()->GetStaticMethodID(cls, name, sig);
 	}
 	~method() {
 	}
@@ -462,14 +465,14 @@ public:
 	float operator () (jobject obj, ...) const {
 		va_list args;
 		va_start(args, obj);
-		float ret = env_->CallFloatMethodV(obj, mid_, args);
+		float ret = getEnv()->CallFloatMethodV(obj, mid_, args);
 		va_end(args);
 		return ret;
 	}
 	float operator () (jclass cls, ...) const {
 		va_list args;
 		va_start(args, cls);
-		float ret = env_->CallStaticFloatMethodV(cls, mid_, args);
+		float ret = getEnv()->CallStaticFloatMethodV(cls, mid_, args);
 		va_end(args);
 		return ret;
 	}
@@ -482,12 +485,12 @@ private:
 public:
 	method(JNIEnv *env, jobject obj, char const * const name, char const * const sig)
 		: env_(env), mid_(NULL) {
-		safe_local_ref<jclass> cls(env, env->GetObjectClass(obj));
-		mid_ = env->GetMethodID(cls.get(), name, sig);
+		safe_local_ref<jclass> cls(getEnv(), getEnv()->GetObjectClass(obj));
+		mid_ = getEnv()->GetMethodID(cls.get(), name, sig);
 	}
 	method(JNIEnv *env, jclass cls, char const * const name, char const * const sig)
 		: env_(env), mid_(NULL) {
-		mid_ = env->GetStaticMethodID(cls, name, sig);
+		mid_ = getEnv()->GetStaticMethodID(cls, name, sig);
 	}
 	~method() {
 	}
@@ -500,14 +503,14 @@ public:
 	double operator () (jobject obj, ...) const {
 		va_list args;
 		va_start(args, obj);
-		double ret = env_->CallDoubleMethodV(obj, mid_, args);
+		double ret = getEnv()->CallDoubleMethodV(obj, mid_, args);
 		va_end(args);
 		return ret;
 	}
 	double operator () (jclass cls, ...) const {
 		va_list args;
 		va_start(args, cls);
-		double ret = env_->CallStaticDoubleMethodV(cls, mid_, args);
+		double ret = getEnv()->CallStaticDoubleMethodV(cls, mid_, args);
 		va_end(args);
 		return ret;
 	}
@@ -520,12 +523,12 @@ private:
 public:
 	method(JNIEnv *env, jobject obj, char const * const name, char const * const sig)
 		: env_(env), mid_(NULL) {
-		safe_local_ref<jclass> cls(env, env->GetObjectClass(obj));
-		mid_ = env->GetMethodID(cls.get(), name, sig);
+		safe_local_ref<jclass> cls(getEnv(), getEnv()->GetObjectClass(obj));
+		mid_ = getEnv()->GetMethodID(cls.get(), name, sig);
 	}
 	method(JNIEnv *env, jclass cls, char const * const name, char const * const sig)
 		: env_(env), mid_(NULL) {
-		mid_ = env->GetStaticMethodID(cls, name, sig);
+		mid_ = getEnv()->GetStaticMethodID(cls, name, sig);
 	}
 	~method() {
 	}
@@ -538,14 +541,14 @@ public:
 	bool operator () (jobject obj, ...) const {
 		va_list args;
 		va_start(args, obj);
-		jboolean ret = env_->CallBooleanMethodV(obj, mid_, args);
+		jboolean ret = getEnv()->CallBooleanMethodV(obj, mid_, args);
 		va_end(args);
 		return JNI_FALSE == ret ? false : true;
 	}
 	bool operator () (jclass cls, ...) const {
 		va_list args;
 		va_start(args, cls);
-		jboolean ret = env_->CallStaticBooleanMethodV(cls, mid_, args);
+		jboolean ret = getEnv()->CallStaticBooleanMethodV(cls, mid_, args);
 		va_end(args);
 		return JNI_FALSE == ret ? false : true;
 	}

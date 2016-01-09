@@ -12,7 +12,7 @@ jamruby_context::map_type jamruby_context::inner_map;
 void jamruby_context::destruct_class::operator() (jamruby_context::class_map_t::value_type val)
 {
 	if (val.second) {
-		env_->DeleteGlobalRef(val.second->jcls);
+		getEnv()->DeleteGlobalRef(val.second->jcls);
 		val.second->jcls = NULL;
 		delete val.second->class_methods;
 		val.second->class_methods = NULL;
@@ -25,7 +25,7 @@ void jamruby_context::destruct_class::operator() (jamruby_context::class_map_t::
 
 jamruby_context::~jamruby_context()
 {
-	std::for_each(classes.begin(), classes.end(), destruct_class(env_));
+	std::for_each(classes.begin(), classes.end(), destruct_class(getEnv()));
 	classes.clear();
 }
 

@@ -30,7 +30,7 @@ static struct mrb_data_type jmethod_type = { CLASS_NAME, jmethod_free };
 
 mrb_value jmethod_make(mrb_state *mrb, JNIEnv *env, jmethodID jmid, char const * const sig)
 {
-	safe_jni::clear_exception ce(env);
+	safe_jni::clear_exception ce(getEnv());
 	RClass *c = mrb_class_get(mrb, CLASS_NAME);
 	if (NULL == c) {
 		return mrb_nil_value();
@@ -45,7 +45,7 @@ mrb_value jmethod_make(mrb_state *mrb, JNIEnv *env, jmethodID jmid, char const *
 		ptr = NULL;
 		return mrb_nil_value();
 	}
-	ptr->env = env;
+	ptr->env = getEnv();
 	ptr->jmid = jmid;
 	ptr->signature = dup;
 	return mrb_obj_value(Data_Wrap_Struct(mrb, c, &jmethod_type, ptr));

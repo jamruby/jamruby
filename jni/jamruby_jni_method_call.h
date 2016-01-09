@@ -2,6 +2,7 @@
 #define JAMRUBY_JNI_METHOD_CALL_H
 
 #include <jni.h>
+#include "jni_load.h"
 extern "C" {
 #include "mruby.h"
 }
@@ -18,14 +19,14 @@ extern void raise_mruby_error(mrb_state *mrb, char *msg, RClass *error_class);
 
 template <typename JType> static jvalue call_method(mrb_state *mrb, JNIEnv *env, jni_type_t const &type, JType obj, jmethodID jmid, jvalue* args)
 {
-	jvalue const &ret = jni_functor<JType>(env)(type, obj, jmid, args);
-	safe_jni::safe_local_ref<jthrowable> e(env, env->ExceptionOccurred());
+	jvalue const &ret = jni_functor<JType>(getEnv())(type, obj, jmid, args);
+	safe_jni::safe_local_ref<jthrowable> e(getEnv(), getEnv()->ExceptionOccurred());
 	if (NULL != e) {
-		env->ExceptionClear();
-		RClass *error_class = get_mruby_error_class(mrb, env, e.get());
-		env->ExceptionClear();
-		char *msg = get_message_from_jthrowable(env, e.get());
-		env->ExceptionClear();
+		getEnv()->ExceptionClear();
+		RClass *error_class = get_mruby_error_class(mrb,getEnv(), e.get());
+		getEnv()->ExceptionClear();
+		char *msg = get_message_from_jthrowable(getEnv(), e.get());
+		getEnv()->ExceptionClear();
 		raise_mruby_error(mrb, msg, error_class);
 	}
 	return ret;

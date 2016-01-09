@@ -33,7 +33,7 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_RObject_n_1objIvGet
 	mrb_state * const state = to_ptr<mrb_state>(mrb);
 	RObject * const ptr = to_ptr<RObject>(obj);
 	mrb_value const &ret = mrb_obj_iv_get(state, ptr, static_cast<mrb_sym>(sym));
-	safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
+	safe_jni::safe_local_ref<jobject> result(getEnv(), create_value(getEnv(), ret));
 	return result.get();
 }
 
@@ -48,7 +48,7 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_RObject_n_1objIvSet
 	mrb_state * const state = to_ptr<mrb_state>(mrb);
 	RObject * const ptr = to_ptr<RObject>(obj);
 	mrb_value val;
-	if (!create_mrb_value(env, value ,val)) {
+	if (!create_mrb_value(getEnv(), value ,val)) {
 		return;
 	}
 	mrb_obj_iv_set(state, ptr, static_cast<mrb_sym>(sym), val);

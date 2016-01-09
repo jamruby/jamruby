@@ -46,13 +46,13 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_RHash_n_1hashSet
   (JNIEnv *env, jclass, jlong mrb, jobject hash, jobject key, jobject value)
 {
 	mrb_value hash_val, key_val, val;
-	if (!create_mrb_value(env, hash, hash_val)) {
+	if (!create_mrb_value(getEnv(), hash, hash_val)) {
 		return;
 	}
-	if (!create_mrb_value(env, key, key_val)) {
+	if (!create_mrb_value(getEnv(), key, key_val)) {
 		return;
 	}
-	if (!create_mrb_value(env, value, val)) {
+	if (!create_mrb_value(getEnv(), value, val)) {
 		return;
 	}
 	mrb_hash_set(to_ptr<mrb_state>(mrb), hash_val, key_val, val);
@@ -67,14 +67,14 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_RHash_n_1hashGet
   (JNIEnv *env, jclass, jlong mrb, jobject hash, jobject key)
 {
 	mrb_value hash_val, key_val;
-	if (!create_mrb_value(env, hash, hash_val)) {
+	if (!create_mrb_value(getEnv(), hash, hash_val)) {
 		return NULL;
 	}
-	if (!create_mrb_value(env, key, key_val)) {
+	if (!create_mrb_value(getEnv(), key, key_val)) {
 		return NULL;
 	}
 	mrb_value const &ret = mrb_hash_get(to_ptr<mrb_state>(mrb), hash_val, key_val);
-	safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
+	safe_jni::safe_local_ref<jobject> result(getEnv(), create_value(getEnv(), ret));
 	return result.get();
 }
 

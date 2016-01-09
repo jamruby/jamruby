@@ -17,6 +17,11 @@ public class MRuby {
 	public static Value loadString(State state, String code) {
 		return n_loadString(state.nativeObject(), code);
 	}
+  
+	public static int loadIrep(State state, String pth) throws FileNotFoundException {
+		return n_loadIrep(state.nativeObject(), pth);
+	}  
+  
 	public static int loadIrep(State state, File f) throws FileNotFoundException {
 		return n_loadIrep(state.nativeObject(), f.getAbsolutePath());
 	}
@@ -36,6 +41,10 @@ public class MRuby {
 	public static Value arrayNew(State state) {
 		return n_arrayNew(state.nativeObject());
 	}
+  
+	public static Value nilValue() {
+		return n_nilValue();
+	}  
 	
 	public static void arrayPush(State state, Value array, Value elem) {
 		n_arrayPush(state.nativeObject(), array, elem);
@@ -145,6 +154,10 @@ public class MRuby {
 		return n_funcallWithBlock(state.nativeObject(), self, name, argc, argv, blk);
 	}
 	
+	public static Value funcallArgv(State state, Value self, String name, int argc, Value[] argv) {
+		return n_funcallArgv(state.nativeObject(), self, name, argc, argv);
+	}  
+  
 	public static Symbol intern(State state, String name) {
 		return new Symbol(n_intern(state.nativeObject(), name));
 	}
@@ -361,6 +374,7 @@ public class MRuby {
 	private static native long n_parseFile(long mrb, String path) throws FileNotFoundException;
 	private static native int n_generateCode(long mrb, long node);
 	private static native Value n_arrayNew(long mrb);
+  private static native Value n_nilValue();
 	private static native void n_arrayPush(long mrb, Value array, Value elem);
 	private static native long n_procNew(long mrb, long irep);
 	
@@ -389,6 +403,7 @@ public class MRuby {
 	
 	private static native Value n_funcall(long mrb, Value self, String name, int argc, Value...argv);
 	private static native Value n_funcallWithBlock(long mrb, Value self, String name, int argc, Value[] argv, Value blk);
+	private static native Value n_funcallArgv(long mrb, Value self, String name, int argc, Value[] argv);  
 	private static native long n_intern(long mrb, String name);
 	private static native String n_sym2name(long mrb, long sym);
 	private static native Value n_strFormat(long mrb, int argc, Value[] argv, Value fmt);

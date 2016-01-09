@@ -7,6 +7,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 /*
  * Class:     org_jamruby_mruby_MRuby
  * Method:    n_redirect_stdout
@@ -257,6 +258,14 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1funcall
 
 /*
  * Class:     org_jamruby_mruby_MRuby
+ * Method:    n_funcallArgv
+ * Signature: (JLorg/jamruby/mruby/Value;Ljava/lang/String;I[Lorg/jamruby/mruby/Value;)Lorg/jamruby/mruby/Value;
+ */
+JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1funcallArgv
+  (JNIEnv *env, jclass, jlong mrb, jobject self, jstring name, jint argc, jobjectArray argv);
+
+/*
+ * Class:     org_jamruby_mruby_MRuby
  * Method:    n_funcallWithBlock
  * Signature: (JLorg/jamruby/mruby/Value;Ljava/lang/String;I[Lorg/jamruby/mruby/Value;Lorg/jamruby/mruby/Value;)Lorg/jamruby/mruby/Value;
  */
@@ -318,6 +327,14 @@ JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_MRuby_n_1objAlloc
  */
 JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1free
   (JNIEnv *, jclass, jlong, jlong);
+
+/*
+ * Class:     org_jamruby_mruby_MRuby
+ * Method:    n_nilValue
+ * Signature: ()Lorg/jamruby/mruby/Value;
+ */
+JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1nilValue
+  (JNIEnv *env, jclass clazz);
 
 /*
  * Class:     org_jamruby_mruby_MRuby

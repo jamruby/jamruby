@@ -51,7 +51,7 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_KHashIv_n_1khGet
 		return NULL;
 	}
 	mrb_value const &ret = kh_value(h, k);
-	safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
+	safe_jni::safe_local_ref<jobject> result(getEnv(), create_value(getEnv(), ret));
 	return result.get();
 }
 
@@ -65,7 +65,7 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_KHashIv_n_1khPut
 {
 	kh_iv * const h = to_ptr<kh_iv>(kh);
 	mrb_value val;
-	if (!create_mrb_value(env, value ,val)) {
+	if (!create_mrb_value(getEnv(), value ,val)) {
 		return;
 	}
 	khint_t k = kh_get(iv, MRBSTATE(mrb), h, to_key(key));
