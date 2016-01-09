@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="hello">
+    <property file="local.properties" />
+
+    <property environment="env" />
+    <condition property="sdk.dir" value="${env.ANDROID_HOME}">
+        <isset property="env.ANDROID_HOME" />
+    </condition>
+
+    <property file="project.properties" />
+
+    <!-- quick check on sdk.dir -->
+    <fail message="sdk.dir is missing. Make sure to generate local.properties using 'android update project'"
+          unless="sdk.dir" />
+
+    <path id="java.classpath">
+      <pathelement location="${classpath}" />
+      <pathelement location="${out.classes.absolute.dir}" />
+    </path>
+
+    <!-- TODO: better support for mixed-source builds -->
+    <target name="javac" description="Compiles R.java and other gen/ files.">
+      <javac srcdir="${gen.absolute.dir}"
+             destdir="${out.classes.absolute.dir}"
+             source="1.6"
+             target="1.6"
+             includeantruntime="false"
+             failonerror="true" />
+             
+      <exec executable="jruby" dir="src">
+         <arg line=" -S mirahc" />
+         <arg line="--cp ${sdk.dir}/platforms/${target}/android.jar:../../bin/classes/" />
+         <arg value="-d" />
+         <arg value="../bin/classes/" />
+         <arg value="." />
+       </exec>  
+       <jar destfile="bin/classes.jar" basedir="bin/classes"/>    
+    </target>
+
+    <target name="compile" depends="-compile" />
+
+    <target name="-compile" depends="-build-setup, -pre-build, -code-gen, -pre-compile, javac">
+
+    </target>
+
+    <!-- version-tag: 1 -->
+    <import file="${sdk.dir}/tools/ant/build.xml" />
+
+    
+</project>

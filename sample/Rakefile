@@ -1,0 +1,31 @@
+desc "Removes generated classes and apk's"
+task :clean do
+  sh "ant clean"
+end
+
+desc "Compiles classes and builds DEBUG apk file"
+task :debug do
+  sh "ant debug"
+end
+
+desc "Installs to a device/emulator (NEEDS ../mrblib/*.mrb at /sdcard/ ie: cd ../ && rake push)"
+task :install do
+  sh "adb install -r bin/*debug.apk"
+end
+
+desc "Runs the app on the device/emulator"
+task :run do
+  sh "adb shell am force-stop org.hello.mruby && adb shell monkey -p org.hello.mruby 1"
+end
+
+desc "pushes the ./sample_jam_application.rb to device:///sdcard/"
+task :push do
+  sh "adb push sample_jam_application.rb /sdcard/"
+end
+
+desc "Clean, create debug apk, install apk, push ruby file, run's the app"
+task :all => [:clean, :debug, :install, :push, :run] do
+  
+end
+
+task :default => :all
