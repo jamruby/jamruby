@@ -3,83 +3,61 @@ jamruby
 
 __jamruby__ is Java to mruby bridge.
 
-Ready to build
+Requirements
 ----
+* android-ndk
+* jruby
+* mirah  
 
-1. Get source code from github.
-2. Edit your 'mruby/build_config.rb' for Android NDK cross-build.
-3. Build 'mruby' for your target ABI (armeabi, armeabi-v7a, x86, mips)
-4. Build 'jamruby' as a shared library via Android NDK.
-
+Build
 ----
-    $ git clone https://github.com/mruby/mruby.git
-    $ git clone https://github.com/jamruby/jamruby.git
-    $ cd mruby
-    $ vi build_config.rb
-    $ ANDROID_NDK_HOME="/path/to/your/NDK" make
-    $ cd ../
+See `build_config.rb` as exampe of mruby build  
+We expect mruby source to be one level above from inside `./jamruby`  
 
-'mruby' is needed for build 'jamruby'.<br/>
-And it has to place on same directory.<br/>
-if your environment is not, you have to modify your makefile 'jamruby/jni/Android.mk'.
+```
+# export JRUBY_ROOT=/home/ppibburr/jruby-1.7.23
+# export ANDROID_NDK_HOME=/path/to/ndk
+# export ANDROID_HOME=/home/ppibburr/android-sdk-linux
+# export PATH=$PATH:$ANDROID_NDK_HOME
+# export PATH=$PATH:$ANDROID_HOME/tools
+# export PATH=$PATH:$ANDROID_HOME/platform-tools
+# export PATH=$PATH:$JRUBY_ROOT/bin
 
+# export ANDROID_STANDALONE_TOOLCHAIN=/home/ppibburr/tc
+
+# git clone https://github.com/mruby/mruby
+
+git clone https://github.com/ppibburr/jamruby
+
+# cp jamruby/build_config.rb mruby/build_config.rb
+# cd mruby
+# make
+# cd ..
+
+# jruby -S gem i mirah
+
+cd jamruby
+rake
+
+## compiles mrblibs
+# rake mrblib
+## installs mrblibs to device
+# rake push
+```
+
+Using
 ----
-Append following code into 'mruby/build_config.rb'.
+jamruby is a NDK library to be included in your Application.  
+See `./sample` for an example application using this library.  
 
-build_config.rb:<br/>
-<pre>
-MRuby::CrossBuild.new('android-armeabi') do |conf|
-  ENV['ANDROID_TARGET_ARCH'] = 'arm'
-  ENV['ANDROID_TARGET_ARCH_ABI'] = 'armeabi'
 
-  toolchain :androideabi
-
-  # if you want to use methods 'p', 'puts', enable one of mrbgem 'mruby-print'.
-  conf.gem 'mrbgems/mruby-print'
-
-end
-MRuby::CrossBuild.new('android-armeabi-v7a') do |conf|
-  ENV['ANDROID_TARGET_ARCH_ABI'] = 'armeabi-v7a'
-
-  toolchain :androideabi
-
-  # if you want to use methods 'p', 'puts', enable one of mrbgem 'mruby-print'.
-  conf.gem 'mrbgems/mruby-print'
-
-end
-MRuby::CrossBuild.new('android-x86') do |conf|
-  ENV['ANDROID_TARGET_ARCH'] = 'x86'
-
-  toolchain :androideabi
-
-  # if you want to use methods 'p', 'puts', enable one of mrbgem 'mruby-print'.
-  conf.gem 'mrbgems/mruby-print'
-
-end
-</pre>
-
-How to build the JNI library
-----
-
-Run command 'ndk-build'.
-
-    $ cd jamruby/jni
-    $ ndk-build
-
-Open project via Eclipse
-----
-
-1. import project; select 'Existing Projects into Workspace' on the import wizard.
-2. select root directory (cloned directory 'jamruby').
-3. build project.
-4. 'jamruby' is built as Android library project.
 
 License
 ----
 
 __MIT License__
 
-Copyright (c) 2012-2013 jamruby developers
+Copyright (c) 2012-2016 jamruby developers
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
