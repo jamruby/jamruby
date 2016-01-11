@@ -17,13 +17,13 @@ Sample
 ```ruby
   java.import "android/widget/Button"
 
-  @b=java::Android::Widget::Button.new(activity)
-  @b.setText "Click Me!"  
-  @b.setOnClickListener() do
+  b = Android::Widget::Button.new(activity)
+  b.setText "Click Me!"  
+  b.setOnClickListener() do
     tst = toast "ouch!"
   end
 
-  activity.setContentView @b
+  activity.setContentView b
 ```
 
 Requirements
