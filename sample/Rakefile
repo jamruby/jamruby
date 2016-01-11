@@ -28,4 +28,11 @@ task :all => [:clean, :debug, :install, :push, :run] do
   
 end
 
+desc "Take a screenshot"
+task :screenshot do
+  sh "adb shell screencap -p /sdcard/screen.png"
+  sh "adb pull /sdcard/screen.png"
+  sh "adb shell rm /sdcard/screen.png"
+end
+
 task :default => :all

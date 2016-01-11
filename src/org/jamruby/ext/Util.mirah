@@ -4,6 +4,8 @@ import java.lang.StringBuilder
 import java.util.Scanner
 import java.util.ArrayList
 import java.io.File
+import java.io.FileOutputStream
+import java.io.PrintStream
 
 import org.jamruby.mruby.Value;
 import org.jamruby.mruby.State
@@ -32,8 +34,22 @@ class Util
 		end
 	end
   
-  def self.writeFile(pth:String):void
+  def self.writeFile(pth:String, content:String):void
+      os = FileOutputStream.new(pth);
+    begin 
+
+      ps = PrintStream.new(os);
+      ps.print(content);
+      ps.close();
+    rescue => e
+      os.close
+      p(e)
+    end
   end 
+  
+  def self.p o:Object
+    Log.i("jamutil", "#{o}")
+  end
   
   def self.toValue(mrb:State, obj:Object):Value
     if obj.kind_of?(Integer)
@@ -46,8 +62,8 @@ class Util
     elsif obj.kind_of?(CharSequence)
       MRuby.strNew(mrb, String(obj))
     else
-      # Log.i "jamapp", "Make NIL"
-      MRuby.nilValue()
+      Log.i "jamapp", "Make NIL"
+      Value.new(-1)
     end
   end
   
@@ -61,6 +77,34 @@ class Util
       return false
     end
   end
+  
+  def self.isInstance(ins:Object, what:String)
+    classForName(what).isInstance(ins)
+  end
+  
+  def self.classForName(name:String):Class
+    begin
+      p name
+      Class.forName(name)
+    rescue => e
+      p e
+      nil
+    end
+  end
+  
+  def self.innerClassesOf(cls:Class):ObjectList
+    ol = ObjectList.new
+  
+    cls.getClasses.each do |c|
+      ol.addStr c.getName
+    end
+    
+    return ol
+  end
+  
+  # def self.fieldsOf(cls:Class):ObjectList
+  #   # ...  
+  # end
   
   def self.arrayListToValueArray(mrb:State, al:ArrayList):Value[]
     va = Value[al.size]

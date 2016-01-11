@@ -2,11 +2,17 @@ package org.jamruby.ext
 
 import ObjectList
 import java.lang.reflect.Method;
-
+import android.util.Log
 
 
 class Invoke
   def self.create(as:String, ins:Object, mname:String, atypes:ObjectList, args:ObjectList):Invoke
+    if Class.forName(as).isInstance(ins)
+      Log.i("jaminv", "ins is #{as}")
+    else
+      Log.i("jaminv", "ins #{ins} is not #{Class.forName(as)}")
+    end
+    
     atypev = Class[args.size];
     argv   = Object[args.size];
     

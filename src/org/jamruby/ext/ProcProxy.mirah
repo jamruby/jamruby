@@ -32,15 +32,34 @@ class ProcProxyInvocationHander
     @mrb = mrb;
   end
   
-  def invoke(proxy:Object, method:Method, args:Object[]):Object 
-      if args[0].kind_of?(ArrayList) and args.length == 1    
-        va = Util.arrayListToValueArray(mrb, ArrayList(args[0]))
+  def mrb
+    @mrb
+  end
+  
+  def proc
+    @proc
+  end
+  
+  def invoke(proxy:Object, method:Method, args:Object[]):Object
+    ins = self
+    a=ObjectList.create
+  
+    args.each do |o| 
+      a.addObj o
+    end
+             
+
+      if a.get(0).kind_of?(ArrayList) and a.size == 1    
+        va = Util.arrayListToValueArray(ins.mrb, ArrayList(a.get(0)))
         
-        return MRuby.funcallArgv(mrb, proc, "call", va.length, va);
+        MRuby.funcallArgv(ins.mrb, ins.proc, "call", va.length, va);
+      else
+        va = Util.arrayListToValueArray(ins.mrb, a)
+      
+        MRuby.funcallArgv(ins.mrb, ins.proc, "call", va.length, va);
       end
-      
-      va = Util.objectArrayToValueArray(mrb, args)
-      
-      return MRuby.funcallArgv(mrb, proc, "call", va.length, va);
+
+  
+    nil
   end
 end

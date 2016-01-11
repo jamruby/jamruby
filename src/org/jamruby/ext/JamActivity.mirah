@@ -56,10 +56,10 @@ class JamActivity < Activity
   
   def loadScript(pth:String)
     n = self
-    runOnUiThread do   
+   # runOnUiThread do   
       script = Util.readFile(pth)
 
       Log.i("jamapp", n.jamruby.loadString(script).toString)
-    end
+ #   end
   end
 end
