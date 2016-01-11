@@ -1,7 +1,7 @@
 LOCAL_PATH := $(call my-dir)
 RUBY_ROOT  := $(LOCAL_PATH)/../../mruby
 #EXTRA_FLAGS:=
-EXTRA_FLAGS:= -DNO_DEBUG_LOG
+EXTRA_FLAGS:= -DNO_DEBUG_LOG -DHAVE_PTHREADS
 
 $(shell mkdir -p $(LOCAL_PATH)/../obj/local/$(TARGET_ARCH_ABI))
 $(shell cp $(RUBY_ROOT)/build/android-$(TARGET_ARCH_ABI)/lib/libmruby.a $(LOCAL_PATH)/../obj/local/$(TARGET_ARCH_ABI)/libmruby.a)

@@ -3,10 +3,28 @@ begin
   require "java/util/regex/Matcher"
   require "android/util/Log"
   require "org/jamruby/ext/Util"
+  require "org/jamruby/ext/ObjectList"
   
-  def p *o
+  module List
+    def each &b
+      this = NWrap.as(self, ::Org::Jamruby::Ext::ObjectList)
+      for i in 0..this.size-1
+        b.call this.get(i)
+      end
+    end
+  end
+  
+  def print *o
     o.each do |q| Android::Util::Log.i("jam_mrblib.mrb", q.inspect) end
   end  
+  
+  def puts *o
+    print *o
+  end
+  
+  def p *o
+    o.each do |q| print q.inspect end
+  end
   
   IMPORT_OVERLOADS = {
     "android/widget/Toast" => [
@@ -17,22 +35,116 @@ begin
     
     "android/widget/Button" => [
       Proc.new do
-        NWrap.override Android::Widget::Button, "setOnClickListener", "(Landroid/view/View$OnClickListener;)V"         
+        NWrap.override Android::Widget::Button, "setText", "(Ljava/lang/CharSequence;)V"       
       end
     ],
     
-    "android/view/View" => [
+    "android/widget/TextView" => [
       Proc.new do
-        NWrap.override Android::View::View, "setOnClickListener", "(Landroid/view/View$OnClickListener;)V"         
+        NWrap.override Android::Widget::TextView, "setText", "(Ljava/lang/CharSequence;)V"  
       end
-    ]    
+    ]   
   }  
   
   class JWrap  
+    def self.const_missing c
+    p :IN_WRAP
+      p pth = self::WRAP::CLASS_PATH.split("/").join(".")
+      cls = Org::Jamruby::Ext::Util.classForName(pth )
+      if r=Org::Jamruby::Ext::FieldHelper.getField(cls, c.to_s)
+        return r
+      end 
+      
+      super
+    end   
+  
     module View
+      class UI
+        def initialize ins
+          @pth = ins.class::WRAP::CLASS_PATH
+          @cls = ins.class::WRAP
+          @ins = ins
+          @posts = {}
+        end
+        p 66
+        def method_missing m, *o
+          p 55
+          if !@posts[m] and @ins.respond_to?(m)
+            pth = @pth.split("/").join(".")
+           
+            ui = java::Org::Jamruby::Ext::UIRunner.new(pth, @ins, m.to_s)
+            
+            if sig=@cls::SIGNATURES.find do |s| s[0] == m.to_s end
+              args = sig[1].split(")")[0][1..-1]
+              if args.index("[")
+                raise "NotSupportedError: cannot create array params."
+              end
+              
+              types = []
+
+              mtch = args.jmatch("[I]|[J]|[Z]|L(.*?)\;")
+              while mtch.find
+                q = mtch.group
+                if q[0..0] == "L"
+                  types << q[1..-2].split("/").join(".")
+                elsif q == "I"
+                  types << "java.lang.Integer"
+                end
+              end
+              
+              types.each do |t|
+                ui.atypes.addStr t
+              end
+            
+              @posts[m] = [ui, types]
+            end  
+          end
+          
+          if @posts[m]
+            if o.length != @posts[m][1].length
+              raise "ArgumentError: #{o.length} for #{@posts[m][1].length}"
+            end
+            
+            ui = @posts[m][0] 
+            
+            ui.args.clear
+            ui.args.trimToSize
+            
+            o.each_with_index do |a, i|
+              case @posts[m][1][i]
+              when "java.lang.Object"
+                ui.args.addObj a
+              when "java.lang.String"
+                ui.args.addStr a   
+              when "java.lang.Integer"
+                ui.args.addInt a                                 
+              when "java.lang.Double"
+                ui.args.addDbl a                                 
+              when "java.lang.Float"
+                ui.args.addFlt a   
+              else
+                ui.args.addObj a
+              end
+            end
+            
+            @ins.post @posts[m][0]
+            
+            return true
+          end
+          
+          super
+        end
+      end
+      
+      p 99
+    
       def setOnClickListener &b
         @cb = b
         super(proxy("android.view.View$OnClickListener", &@cb))
+      end
+      
+      def ui
+        @ui ||= UI.new(self)
       end
     end
   
@@ -62,7 +174,12 @@ begin
     end
     
     def jobj
-      @dlg
+      q = @dlg
+      while q.respond_to?(:jobj)
+        q = q.jobj
+      end
+      
+      q
     end
     
     def is_a? what
@@ -138,7 +255,7 @@ begin
     end
     
     def self.wrap o
-      _new(o)
+      _new(o.respond_to?(:jobj) ? o.jobj : o)
     end
     
     class << self
@@ -161,7 +278,7 @@ begin
   module JavaBridge
     def self.import path
       t = ::Object
-      a = path.split("/")
+      a = path.split("/").join(".").split("$").join(".").split(".")
       i = 0
       ot = self
       sym = nil
@@ -203,10 +320,21 @@ begin
         
         t::STATIC_SIGNATURES.each do |o|
           cls.add_method(o[0], true) unless o[0] == "new"
+        end
+        
+        get_inner_classes(path).each do |ic|
+          p [:IC, ic.to_s]
+          java.import ic.to_s
         end        
         
         return cls 
       end
+    end
+    
+    def self.get_inner_classes pth
+      o = ::Org::Jamruby::Ext::Util.innerClassesOf(::Org::Jamruby::Ext::Util.classForName(pth.split("/").join(".")))
+      o.extend List
+      o
     end
   end
 
@@ -284,6 +412,7 @@ begin
     end
   end
 
+  java.import "org/jamruby/ext/FieldHelper"
   java.import "android/app/Activity"
   java.import "android/widget/Toast"
   java.import "android/os/Handler"  
@@ -291,7 +420,7 @@ begin
   java.import "org/jamruby/ext/ObjectList"    
   java.import "org/jamruby/ext/Util"  
   java.import "org/jamruby/ext/Invoke"
-  java.import "org/jamruby/ext/UIRunner"
+  java.import "org/jamruby/ext/UIRunner" 
   java.import "org/jamruby/ext/ProcProxy" 
   java.import "org/jamruby/ext/MessageRunner"
   java.import "org/jamruby/ext/MessageHandler"      
@@ -370,8 +499,16 @@ begin
       tst
     end
     
+    def print *o
+      o.each do |q| Android::Util::Log.i("jam_mrblib.mrb", q.inspect) end
+    end  
+    
+    def puts *o
+      print *o
+    end
+    
     def p *o
-      o.each do |q| Android::Util::Log.i("jam", q.inspect) end
+      o.each do |q| print q.inspect end
     end
 
     def activity
@@ -383,7 +520,13 @@ begin
       p "get handle"
       activity.getHandler
     end
+    
+    def sleep amt
+      Thread.jsleep amt
+    end
   end
+  
+  p :GO
 rescue => e
   $r=e
   p $r

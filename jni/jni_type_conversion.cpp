@@ -152,7 +152,7 @@ static inline jobject new_value_sym(JNIEnv *env, jclass cls, mrb_sym value) {
 }
 
 jobject create_value(JNIEnv *env, mrb_value const &value) {
-    safe_jni::safe_local_ref<jclass> cls(getEnv(), findClass("org/jamruby/mruby/Value"));
+    safe_jni::safe_local_ref<jclass> cls(env, findClass("org/jamruby/mruby/Value"));
     if (!cls) {
         return NULL;
     }
@@ -162,19 +162,19 @@ jobject create_value(JNIEnv *env, mrb_value const &value) {
     case MRB_TT_TRUE:
     case MRB_TT_FALSE:
     case MRB_TT_UNDEF:
-        v = new_value(getEnv(), cls.get(), value.tt, value.value.i);
+        v = new_value(env, cls.get(), value.tt, value.value.i);
         break;
     case MRB_TT_FIXNUM:
-        v = new_value(getEnv(), cls.get(), value.value.i);
+        v = new_value(env, cls.get(), value.value.i);
         break;
     case MRB_TT_FLOAT:
-        v = new_value(getEnv(), cls.get(), value.value.f);
+        v = new_value(env, cls.get(), value.value.f);
         break;
     case MRB_TT_SYMBOL:
-        v = new_value_sym(getEnv(), cls.get(), value.value.sym);
+        v = new_value_sym(env, cls.get(), value.value.sym);
         break;
     default:
-        v = new_value(getEnv(), cls.get(), value.tt, value.value.p);
+        v = new_value(env, cls.get(), value.tt, value.value.p);
         break;
     }
     return v;

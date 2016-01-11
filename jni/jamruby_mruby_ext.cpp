@@ -46,7 +46,8 @@ namespace org {
 namespace jamruby {
 
 static std::string gen_java_class_name(std::string const &name, int const &len);
-static void export_jclass(mrb_state *mrb, JNIEnv *env, jclass cls, std::string const &name);
+static std::string gen_java_inner_class_path(std::string const &name, int const &len);
+static void export_jclass(mrb_state *mrb, JNIEnv *env, jclass cls, std::string const &name, std::string const &nice);
 static RClass* define_class(mrb_state *mrb, JNIEnv *env, RClass *parent, jclass cls, std::string const &name);
 static mrb_value java_class_method(mrb_state *mrb, mrb_value self);
 static mrb_value java_object_method(mrb_state *mrb, mrb_value self);
@@ -102,7 +103,7 @@ LOGE("DAZ CLAZZ: %s", str);
 		return mrb_nil_value(); // don't reach here
 	}
     LOGE("PRE EXP");
-	export_jclass(mrb,getEnv(), cls.get(), class_name);
+	export_jclass(mrb,getEnv(), cls.get(), class_name, gen_java_inner_class_path(class_name.c_str(), len));
 
 	return mrb_nil_value();
 }
@@ -115,6 +116,11 @@ static bool is_dot(char const &c)
 	return '.' == c ? true : false;
 }
 
+static bool is_dollar(char const &c)
+{
+	return '$' == c ? true : false;
+}
+
 static std::string gen_java_class_name(std::string const &name, int const &len)
 {
 	std::string copied;
@@ -124,14 +130,23 @@ static std::string gen_java_class_name(std::string const &name, int const &len)
 	return copied;
 }
 
-static void export_jclass(mrb_state *mrb, JNIEnv *env, jclass cls, std::string const &name)
+static std::string gen_java_inner_class_path(std::string const &name, int const &len)
+{
+	std::string copied;
+	copied.resize(len+1);
+	std::replace_copy_if(name.begin(), name.end(), copied.begin(), is_dollar, '/');
+	copied[len] = '\0';
+	return copied;
+}
+
+static void export_jclass(mrb_state *mrb, JNIEnv *env, jclass cls, std::string const &name, std::string const &nice)
 {
 	std::string::size_type ofst = 0;
 	RClass *parent = NULL;
 	LOGD("export java class '%s'.", name.c_str());
 	for (;;) {
-		std::string::size_type const n = name.find_first_of('/', ofst);
-		std::string mod_name = name.substr(ofst, n - ofst);
+		std::string::size_type const n = nice.find_first_of('/', ofst);
+		std::string mod_name = nice.substr(ofst, n - ofst);
 		if (std::islower(mod_name[0])) {
 			mod_name[0] = std::toupper(mod_name[0]);
 		}
@@ -333,7 +348,7 @@ static RClass* define_class(mrb_state *mrb, JNIEnv *env, RClass *parent, jclass 
 				continue;
 			}
 
-			//LOGE("define instance method '%s.%s : %s'.", name.c_str(), mname_str.string(), signature.string());
+			LOGE("define instance method '%s.%s : %s'.", name.c_str(), mname_str.string(), signature.string());
 			mrb_define_method(mrb, target, mname_str.string(), java_object_method, MRB_ARGS_ANY());
 			
 			mrb_value m = mrb_ary_new(mrb);

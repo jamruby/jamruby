@@ -518,9 +518,7 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1funcall
 	delete[] values;
 	values = NULL;	
 	
-    safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
-
-	return result.get();
+  return create_value(getEnv(), ret);
 }
 
 
@@ -550,9 +548,9 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1funcallArgv
 	delete[] values;
 	values = NULL;	
 	
-    safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
-
-	return result.get();
+  // return NULL;
+  
+  return create_value(getEnv(), ret);
 }
 
 
@@ -582,8 +580,7 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1funcallWithBlock
 	delete[] values;
 	values = NULL;
 
-	safe_jni::safe_local_ref<jobject> result(getEnv(), create_value(getEnv(), ret));
-	return result.get();
+  return create_value(getEnv(), ret);
 }
 
 /*
@@ -1207,6 +1204,20 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1defineGlobalConst
 JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1init_1JNI_1module
   (JNIEnv *env, jclass, jlong mrb, jlong threadId)
 {
+  
+  env->GetJavaVM(&gJvm);;  // cache the JavaVM pointer
+  
+
+	jclass randomClass = env->FindClass("org/jamruby/core/Jamruby");
+	jclass classClass = env->GetObjectClass(randomClass);
+	jclass classLoaderClass = env->FindClass("java/lang/ClassLoader");
+	jmethodID getClassLoaderMethod = env->GetMethodID(classClass, "getClassLoader",
+											 "()Ljava/lang/ClassLoader;");
+	gClassLoader = env->NewGlobalRef(env->CallObjectMethod(randomClass, getClassLoaderMethod));
+	gFindClassMethod = env->GetMethodID(classLoaderClass, "findClass",
+								"(Ljava/lang/String;)Ljava/lang/Class;");		
+  jam_thread = 0;  
+  
 	using namespace org::jamruby;
 	jamruby_context *context = jamruby_context::register_context(MRBSTATE(mrb), getEnv());
 	if (NULL == context) {
