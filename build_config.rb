@@ -74,7 +74,7 @@ end
 
 MRuby::CrossBuild.new('android-armeabi') do |conf|
   toolchain :android
-
+  conf.cc.flags << '-DHAVE_PTHREADS'
   # if you want to use methods 'p', 'puts', enable one of mrbgem 'mruby-print'.
   conf.gem 'mrbgems/mruby-print'
   conf.gem 'mrbgems/mruby-compiler'
@@ -83,7 +83,7 @@ end
 MRuby::CrossBuild.new('android-armeabi-v7a') do |conf|
 
   toolchain :android, :arch=>:'armeabi-v7a'
-
+  conf.cc.flags << '-DHAVE_PTHREADS'
   # if you want to use methods 'p', 'puts', enable one of mrbgem 'mruby-print'.
   conf.gem 'mrbgems/mruby-print'
   conf.gem 'mrbgems/mruby-compiler'  
