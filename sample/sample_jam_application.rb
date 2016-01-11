@@ -6,8 +6,7 @@ begin
   class Updater
     attr_reader :thread
     def initialize
-    
-		  @thread = Thread.new do
+      @thread = Thread.new do
         begin  
           i = -1       
 
@@ -18,9 +17,9 @@ begin
         rescue=>e
           p [:THREAD_ERROR, e]
         end
-		  end
-	  end
-	end  
+      end
+    end
+  end  
   
   param = java::Android::Widget::LinearLayout::LayoutParams.new(-1, -2, 3.0);
   
