@@ -28,7 +28,9 @@ See `rake -T`
   
   # rake install
   # rake push
-  # cd .. && rake mrblib
-  # cd .. && rake push
+  
+  ### cd .. && rake mrblib && cd sample
+  ## cd .. && rake push && cd sample
+  
   # rake run
 ```
