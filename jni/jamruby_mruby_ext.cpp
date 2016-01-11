@@ -1330,9 +1330,9 @@ void mrb_mruby_thread_init(mrb_state* mrb) {
   mrb_define_method(mrb, _class_queue, "num_waiting", mrb_queue_num_waiting, MRB_ARGS_NONE());
   mrb_define_method(mrb, _class_queue, "empty?", mrb_queue_empty_p, MRB_ARGS_NONE());
 
-  FILE *fp = fopen("/sdcard/jam_mrblib.mrb", "rb");
+  FILE *fp = fopen("/sdcard/jamruby/mrblib/core.mrb", "rb");
   if (NULL == fp) {
-	LOGE("JAMRUBY: ERROR jamlib.mrb not loaded!");
+	LOGE("JAMRUBY: ERROR core.mrb not loaded!");
   } else {
     mrb_load_irep_file(mrb, fp);
   }

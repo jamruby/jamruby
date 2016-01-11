@@ -14,6 +14,6 @@ begin
     TOP_MRB_HANDLER
   )  
 rescue => e
-  JAVA::Android::Util::Log.e("jam_activity.mrb", "Error: #{e}")
+  JAVA::Android::Util::Log.e("activity.mrb", "Error: #{e}")
   $r = e
 end

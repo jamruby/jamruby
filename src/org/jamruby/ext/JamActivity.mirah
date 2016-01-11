@@ -25,7 +25,7 @@ class JamActivity < Activity
     
     @jamruby = Jamruby.new
     
-    loadCompiled("/sdcard/jam_activity.mrb")
+    loadCompiled("/sdcard/jamruby/mrblib/activity.mrb")
   end
   
   def setHandler prx:MessageRunner

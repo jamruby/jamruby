@@ -6,6 +6,6 @@ class HelloActivity < JamActivity
   def onCreate(state)
     super state
     
-    loadScript("/sdcard/sample_jam_application.rb")
+    loadScript("/sdcard/jamruby/scripts/default.rb")
   end
 end
