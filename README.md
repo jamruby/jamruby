@@ -28,26 +28,18 @@ Sample
 
 Requirements
 ----
-* android-ndk
-* jruby
-* mirah  
+* android-ndk (ndk-build must be on path)
+* jruby  (must be on path)
+* mirah  (jruby -S gem i mirah)
 
 Build
 ----
+The following builds native library.  
+
 See `build_config.rb` as exampe of mruby build  
 We expect mruby source to be one level above from inside `./jamruby`  
 
 ```
-# export JRUBY_ROOT=/home/ppibburr/jruby-1.7.23
-# export ANDROID_NDK_HOME=/path/to/ndk
-# export ANDROID_HOME=/home/ppibburr/android-sdk-linux
-# export PATH=$PATH:$ANDROID_NDK_HOME
-# export PATH=$PATH:$ANDROID_HOME/tools
-# export PATH=$PATH:$ANDROID_HOME/platform-tools
-# export PATH=$PATH:$JRUBY_ROOT/bin
-
-# export ANDROID_STANDALONE_TOOLCHAIN=/home/ppibburr/tc
-
 # git clone https://github.com/mruby/mruby
 
 git clone https://github.com/ppibburr/jamruby
@@ -72,6 +64,8 @@ Using
 ----
 jamruby is a NDK library to be included in your Application.  
 See `./sample` for an example application using this library.  
+
+projects can be built from command line usung `ant`
 
 
 

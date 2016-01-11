@@ -7,6 +7,13 @@ Loads ruby file from /sdcard/ and creates `Activity`.
 
 ![alt tag](https://raw.githubusercontent.com/ppibburr/jamruby/master/sample/screen.png)
 
+Requirements
+----
+* android-sdk (and a target. tested against android-15)
+* ant
+* jruby (on path)
+* mirah (jruby -S gem i mirah)
+
 Build
 ----
 
