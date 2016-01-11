@@ -1,10 +1,10 @@
+# Handle messaging across Threads
+
 begin
   TOP_MRB_HANDLER_PROC = Proc.new  do |i,*o|
-    p "thread: #{i} #{o}"
     begin
       handler.dispatch i, *o
     rescue => e
-      p "thread: #{e}"
     end
   end
   
@@ -14,6 +14,6 @@ begin
     TOP_MRB_HANDLER
   )  
 rescue => e
-  Android::Util::Log.e("jam_activity.mrb", "Error: #{e}")
+  JAVA::Android::Util::Log.e("jam_activity.mrb", "Error: #{e}")
   $r = e
 end

@@ -156,15 +156,21 @@ static void export_jclass(mrb_state *mrb, JNIEnv *env, jclass cls, std::string c
 			break;
 		}
 		ofst = n + 1;
+    RClass *j;
+    if (mrb_const_defined_at(mrb, mrb_obj_value(mrb->object_class), mrb_intern_cstr(mrb, "JAVA"))) {
+      j = mrb_module_get(mrb, "JAVA");
+    } else {
+      j = mrb_define_module(mrb, "JAVA");
+    }
 
 		RClass *mod;
 		mrb_sym const sym = mrb_intern_cstr(mrb, mod_name.c_str());
 		if (NULL == parent) {
-			if (mrb_const_defined_at(mrb, mrb_obj_value(mrb->object_class), sym)) {
-				mod = mrb_module_get(mrb, mod_name.c_str());
+			if (mrb_const_defined_at(mrb, mrb_obj_value(j), sym)) {
+				mod = mrb_module_get_under(mrb, j, mod_name.c_str());
 			} else {
 				LOGD("define module (%s)\n", mod_name.c_str());
-				mod = mrb_define_module(mrb, mod_name.c_str());
+				mod = mrb_define_module_under(mrb, j, mod_name.c_str());
 			}
 		} else {
 			if (mrb_const_defined_at(mrb, mrb_obj_value(parent), sym)) {

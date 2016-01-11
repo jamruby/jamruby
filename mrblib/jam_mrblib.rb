@@ -7,7 +7,7 @@ begin
   
   module List
     def each &b
-      this = NWrap.as(self, ::Org::Jamruby::Ext::ObjectList)
+      this = NWrap.as(self, JAVA::Org::Jamruby::Ext::ObjectList)
       for i in 0..this.size-1
         b.call this.get(i)
       end
@@ -15,7 +15,7 @@ begin
   end
   
   def print *o
-    o.each do |q| Android::Util::Log.i("jam_mrblib.mrb", q.inspect) end
+    o.each do |q| JAVA::Android::Util::Log.i("jam_mrblib.mrb", q.inspect) end
   end  
   
   def puts *o
@@ -29,29 +29,29 @@ begin
   IMPORT_OVERLOADS = {
     "android/widget/Toast" => [
        Proc.new do
-         NWrap.static_override Android::Widget::Toast, "makeText", "(Landroid/content/Context;Ljava/lang/CharSequence;I)Landroid/widget/Toast;"
+         NWrap.static_override JAVA::Android::Widget::Toast, "makeText", "(Landroid/content/Context;Ljava/lang/CharSequence;I)Landroid/widget/Toast;"
        end
     ],
     
     "android/widget/Button" => [
       Proc.new do
-        NWrap.override Android::Widget::Button, "setText", "(Ljava/lang/CharSequence;)V"       
+        NWrap.override JAVA::Android::Widget::Button, "setText", "(Ljava/lang/CharSequence;)V"       
       end
     ],
     
     "android/widget/TextView" => [
       Proc.new do
-        NWrap.override Android::Widget::TextView, "setText", "(Ljava/lang/CharSequence;)V"  
+        NWrap.override JAVA::Android::Widget::TextView, "setText", "(Ljava/lang/CharSequence;)V"  
       end
     ]   
   }  
   
   class JWrap  
+    # Look up Fields
     def self.const_missing c
-    p :IN_WRAP
-      p pth = self::WRAP::CLASS_PATH.split("/").join(".")
-      cls = Org::Jamruby::Ext::Util.classForName(pth )
-      if r=Org::Jamruby::Ext::FieldHelper.getField(cls, c.to_s)
+      pth = self::WRAP::CLASS_PATH.split("/").join(".")
+      cls = JAVA::Org::Jamruby::Ext::Util.classForName(pth )
+      if r = JAVA::Org::Jamruby::Ext::FieldHelper.getField(cls, c.to_s)
         return r
       end 
       
@@ -59,6 +59,8 @@ begin
     end   
   
     module View
+      # Wraps a Android.View.View
+      # methods caled will be ran on UiThread
       class UI
         def initialize ins
           @pth = ins.class::WRAP::CLASS_PATH
@@ -66,13 +68,12 @@ begin
           @ins = ins
           @posts = {}
         end
-        p 66
+      
         def method_missing m, *o
-          p 55
           if !@posts[m] and @ins.respond_to?(m)
             pth = @pth.split("/").join(".")
            
-            ui = java::Org::Jamruby::Ext::UIRunner.new(pth, @ins, m.to_s)
+            ui = Org::Jamruby::Ext::UIRunner.new(pth, @ins, m.to_s)
             
             if sig=@cls::SIGNATURES.find do |s| s[0] == m.to_s end
               args = sig[1].split(")")[0][1..-1]
@@ -135,14 +136,13 @@ begin
           super
         end
       end
-      
-      p 99
     
       def setOnClickListener &b
         @cb = b
         super(proxy("android.view.View$OnClickListener", &@cb))
       end
       
+      # @return [UI] wrapper of self whose methods are thread safe
       def ui
         @ui ||= UI.new(self)
       end
@@ -184,7 +184,7 @@ begin
     
     def is_a? what
       if what.is_a?(::String)
-        if Org::Jamruby::Ext::Util.is_a(self.jobj, what)
+        if JAVA::Org::Jamruby::Ext::Util.is_a(self.jobj, what)
           return true
         end
         
@@ -198,8 +198,8 @@ begin
       sig = (static ? self::WRAP::STATIC_SIGNATURES : self::WRAP::SIGNATURES).find do |s| s[0] == name.to_s end
       if sig
         
-        @p ||= NWrap.as(Java::Util::Regex::Pattern.compile("\\Q)\\EL(.*?)\;$"), Java::Util::Regex::Pattern)
-        m = NWrap.as(@p.matcher(sig[1]), Java::Util::Regex::Matcher);
+        @p ||= NWrap.as(JAVA::Java::Util::Regex::Pattern.compile("\\Q)\\EL(.*?)\;$"), JAVA::Java::Util::Regex::Pattern)
+        m = NWrap.as(@p.matcher(sig[1]), JAVA::Java::Util::Regex::Matcher);
         if m.find
           path = m.group[2..-2]
           case path
@@ -270,24 +270,29 @@ begin
 
   class String
     def jmatch str
-      p = NWrap.as(Java::Util::Regex::Pattern.compile(str), Java::Util::Regex::Pattern)
-      m = NWrap.as(p.matcher(self), Java::Util::Regex::Matcher);
+      p = NWrap.as(JAVA::Java::Util::Regex::Pattern.compile(str), JAVA::Java::Util::Regex::Pattern)
+      m = NWrap.as(p.matcher(self), JAVA::Java::Util::Regex::Matcher);
     end
   end
 
   module JavaBridge
+    # Binds Java Class to Ruby
+    #
+    # @param [String] path the class to import
+    # @param [Boolean] bool internal use
+    #
+    # @return [Class] 
     def self.import path, bool=false
       if path.index("$") and !bool
-      p [:OVER, path]
+        # defer to outer class import
+        
         import path.split("$")[0]
-      else
-        p [:OVER_OK, path]
       end
     
-      t = ::Object
+      t = ::JAVA
       a = path.split("/").join(".").split("$").join(".").split(".")
       i = 0
-      ot = self
+      ot = ::Object
       sym = nil
       
       a.each do |b|
@@ -306,10 +311,7 @@ begin
           unless i == a.length
             
             unless ot.const_defined?(c.to_sym)
-            p [:OVER_NO, c]
               ot.const_set(c, nt = Module.new)
-              else
-              p [:OVER_TT, c]
             end
           
             ot = ot.const_get(c)
@@ -342,8 +344,13 @@ begin
       end
     end
     
+    # Retrieve a list of inner classes defined in class at +pth+
+    #
+    # @param [String] pth
+    #
+    # @return [::Org::Jamruby::Ext::ObjectList] 
     def self.get_inner_classes pth
-      o = ::Org::Jamruby::Ext::Util.innerClassesOf(::Org::Jamruby::Ext::Util.classForName(pth.split("/").join(".")))
+      o = JAVA::Org::Jamruby::Ext::Util.innerClassesOf(JAVA::Org::Jamruby::Ext::Util.classForName(pth.split("/").join(".")))
       o.extend List
       o
     end
@@ -445,14 +452,12 @@ begin
     end
   end
  
-  class java::Org::Jamruby::Ext::MessageHandler
+  class Org::Jamruby::Ext::MessageHandler
     Callbacks = []
     def on n, &b
       id = nil
-      p "reg: #{n}"
       if id = registerMessage(n.to_s)
         Callbacks[id] = b
-        p "reg: added #{id}"
         return true
       end
       
@@ -460,21 +465,16 @@ begin
     end
     
     def dispatch id, *o 
-      p "dispatch: #{id}"
       if id >=0 and cb=Callbacks[id]
-        p "dispatch: call #{id}"
         cb.call *o
-        p "dispatch: called"
       end 
     end
     
     def emit n, *args
-      p "emit: #{n} #{messages.size}"
-      if (id=messages.indexOf(n.to_s)) >= 0
-        p "emit: valid name #{n}"      
+      if (id=messages.indexOf(n.to_s)) >= 0    
         l = java::Org::Jamruby::Ext::ObjectList.create
+
         pushMsg id,l
-        p "emit: pushed msg #{id}"
         
         args.each do |a|
           if a.is_a?(Integer)
@@ -489,9 +489,8 @@ begin
             l.addObj nil
           end
         end
-        p "emit: send msg ..."
+
         sendEmptyMessage(id)
-        p "emit: sent"
       end
     end
   end 
@@ -499,19 +498,19 @@ begin
   class Thread
     def self.jsleep i
       i = i * 1000.0
-      java::Java::Lang::Thread.sleep i.to_i
+      Java::Lang::Thread.sleep i.to_i
     end
   end
 
   module Kernel        
     def toast str, len = 500
-      tst = java::Android::Widget::Toast.makeText activity, str, len
+      tst = Android::Widget::Toast.makeText activity, str, len
       tst.show
       tst
     end
     
     def print *o
-      o.each do |q| Android::Util::Log.i("jam_mrblib.mrb", q.inspect) end
+      o.each do |q| JAVA::Android::Util::Log.i("jam_mrblib.mrb", q.inspect) end
     end  
     
     def puts *o
@@ -523,12 +522,10 @@ begin
     end
 
     def activity
-      p "get act"
-      java::Org::Jamruby::Ext::JamActivity.getInstance
+      Org::Jamruby::Ext::JamActivity.getInstance
     end
 
     def handler
-      p "get handle"
       activity.getHandler
     end
     
@@ -536,8 +533,6 @@ begin
       Thread.jsleep amt
     end
   end
-  
-  p :GO
 rescue => e
   $r=e
   p $r
