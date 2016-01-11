@@ -1,5 +1,7 @@
 begin
+  java.import("android/widget/TextView")
   java.import "android/widget/Button"
+  java.import "android/widget/LinearLayout"
 
   class Updater
     attr_reader :thread
@@ -19,18 +21,27 @@ begin
 		  end
 	  end
 	end  
-
+  
+  param = java::Android::Widget::LinearLayout::LayoutParams.new(-1, -2, 3.0);
+  
+  ll = java::Android::Widget::LinearLayout.new(activity)
+  ll.setOrientation java::Android::Widget::LinearLayout::VERTICAL
+  
+  tv = java::Android::Widget::TextView.new(activity)
+  
   b=java::Android::Widget::Button.new(activity)
   b.setText "Click Me!"  
   b.setOnClickListener() do
     tst = toast "ouch!"
   end
-  b.setId 1
+
+  ll.addView(tv, param)
+  ll.addView(b)
   
-  activity.setContentView b
+  activity.setContentView ll
   
   handler.on :foo  do |*o|
-    b.setText "Click Me! -- Thread Looped: #{o[0]} times!"
+    tv.setText "Thread Looped: #{o[0]} times!"
   end
   
   Updater.new()

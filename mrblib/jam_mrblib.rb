@@ -276,12 +276,20 @@ begin
   end
 
   module JavaBridge
-    def self.import path
+    def self.import path, bool=false
+      if path.index("$") and !bool
+      p [:OVER, path]
+        import path.split("$")[0]
+      else
+        p [:OVER_OK, path]
+      end
+    
       t = ::Object
       a = path.split("/").join(".").split("$").join(".").split(".")
       i = 0
       ot = self
       sym = nil
+      
       a.each do |b|
         c=b[0..0].capitalize+b[1..-1]
         if !t.const_defined? c.to_sym
@@ -296,8 +304,12 @@ begin
         if t.const_defined? c.to_sym
           i += 1
           unless i == a.length
+            
             unless ot.const_defined?(c.to_sym)
+            p [:OVER_NO, c]
               ot.const_set(c, nt = Module.new)
+              else
+              p [:OVER_TT, c]
             end
           
             ot = ot.const_get(c)
@@ -323,8 +335,7 @@ begin
         end
         
         get_inner_classes(path).each do |ic|
-          p [:IC, ic.to_s]
-          java.import ic.to_s
+          java.import(z=ic.to_s, z.index(path))
         end        
         
         return cls 
