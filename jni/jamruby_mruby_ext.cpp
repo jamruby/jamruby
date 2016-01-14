@@ -1289,10 +1289,42 @@ mrb_value jam_proxy(mrb_state* mrb, mrb_value self) {
 }
 
 
+mrb_value jam_to_java(mrb_state* mrb, mrb_value self) {
+	mrb_value ins;
+	
+	mrb_get_args(mrb, "o", &ins);
+
+    safe_jni::safe_local_ref<jclass> vclazz(getEnv(), findClass("org/jamruby/ext/RubyObject"));
+	  if (!vclazz) {
+		  LOGE("to_java: NO FIND CLASS");
+	  } else {
+		
+	  jmethodID m_create = getEnv()->GetStaticMethodID(vclazz.get(), "create", "(JLorg/jamruby/mruby/Value;)Lorg/jamruby/ext/RubyObject;");
+	 
+	  mrb_value const &value = ins;
+
+	  safe_jni::safe_local_ref<jobject> val(getEnv(), create_value(getEnv(), value)); 
+	 
+	  jobject robject = getEnv()->CallStaticObjectMethod(vclazz.get(), m_create, jlong(mrb), getEnv()->NewGlobalRef(val.get()));	
+	  
+    jni_type_t const type = org::jamruby::get_return_type("()Lorg/jamruby/ext/RubyObject;");
+	  jvalue ret;
+	  ret.l = robject;
+	  
+	  // LOGE("HERE");
+	  mrb_value ro =  org::jamruby::convert_jvalue_to_mrb_value(mrb, getEnv(), type, ret);
+
+	  return ro;
+	}
+	
+	return mrb_nil_value();
+}
+
+
 void mrb_mruby_thread_init(mrb_state* mrb) {
   RClass *clsKern = mrb_class_get(mrb, "Object");
   mrb_define_method(mrb, clsKern, "proxy", jam_proxy, MRB_ARGS_REQ(1));
-
+  mrb_define_method(mrb, clsKern, "to_java", jam_to_java, MRB_ARGS_REQ(1));
   struct RClass *_class_thread, *_class_mutex, *_class_queue;
 
   _class_thread = mrb_define_class(mrb, "Thread", mrb->object_class);

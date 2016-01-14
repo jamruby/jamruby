@@ -21,16 +21,16 @@ begin
     end
   end  
   
-  param = Android::Widget::LinearLayout::LayoutParams.new(-1, -2, 3.0);
+  param = Android::Widget::LinearLayout::LayoutParams.new(:match_parent, :match_parent, 3.0);
   
   ll = Android::Widget::LinearLayout.new(activity)
-  ll.setOrientation Android::Widget::LinearLayout::VERTICAL
+  ll.setOrientation :vertical
   
   tv = Android::Widget::TextView.new(activity)
   
   b=Android::Widget::Button.new(activity)
   b.setText "Click Me!"  
-  b.setOnClickListener() do
+  b.setOnClickListener() do |v|
     tst = toast "ouch!"
   end
 

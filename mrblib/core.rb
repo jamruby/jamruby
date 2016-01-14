@@ -225,14 +225,12 @@ begin
     def self.add_method name, static = false
       this = self
       
-      (static ? singleton_class : self).define_method name do |*o|
+      (static ? singleton_class : self).define_method name do |*o, &b|
         
         sig, as =  this.get_signature(name, static)
         cls = java.import as if as 
       
-        o = (o.map do |q|
-          q.respond_to?(:jobj) ? q.jobj : q
-        end)    
+        o = this.adjust_args *o, &b    
         
         if static
           res = this::WRAP.send name, *o       
@@ -262,9 +260,31 @@ begin
       alias :_new :new
     end
     
-    def self.new *o
-      ins = self::WRAP.new *(o.map do |q| q.respond_to?(:jobj) ? q.jobj : q end)
+    def self.new *o,&b
+      ins = self::WRAP.new *adjust_args(*o,&b)
       wrap ins
+    end
+    
+    def self.adjust_args *o,&b
+      args = (o.map do |q|
+        q.respond_to?(:jobj) ? q.jobj : q
+      end).map do |q|
+        if q.is_a? Symbol
+          begin
+            const_get :"#{q.to_s.upcase}"
+          rescue
+            q
+          end
+        else
+          q
+        end
+      end
+      
+      if b
+        args << proxy("java.lang.Runnable", &b)
+      end
+      
+      o    
     end
   end
 

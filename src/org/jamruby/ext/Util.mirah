@@ -63,8 +63,16 @@ class Util
       MRuby.strNew(mrb, String(obj))
     else
       Log.i "jamapp", "Make NIL"
-      Value.new(-1)
+      MRuby.jobjectMake(mrb, obj)
     end
+  end
+  
+  def self.enums e:Class
+    ol = ObjectList.new
+    e.getEnumConstants.each do |v|
+      ol.add v
+    end
+    ol
   end
   
   def self.is_a(ins:Object, what:String)

@@ -610,6 +610,14 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1cleanup_1JNI_1module
 
 /*
  * Class:     org_jamruby_mruby_MRuby
+ * Method:    n_jobjectMake
+ * Signature: (JLjava/lang/Object;)Lorg/jamruby/mruby/Value;
+ */
+JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1jobjectMake
+  (JNIEnv *env, jclass clazz, jlong mrb, jobject obj);
+
+/*
+ * Class:     org_jamruby_mruby_MRuby
  * Method:    n_loadString
  * Signature: (JLjava/lang/String;)Lorg/jamruby/mruby/Value;
  */

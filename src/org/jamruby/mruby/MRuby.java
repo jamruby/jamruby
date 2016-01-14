@@ -158,6 +158,10 @@ public class MRuby {
 		return n_funcallArgv(state.nativeObject(), self, name, argc, argv);
 	}  
   
+  public static Value jobjectMake(State state, Object obj) {
+    return n_jobjectMake(state.nativeObject(), obj);
+  }
+  
 	public static Symbol intern(State state, String name) {
 		return new Symbol(n_intern(state.nativeObject(), name));
 	}
@@ -446,7 +450,7 @@ public class MRuby {
 	private static native void n_raise(long mrb, long c, String message);
 	private static native void n_warn(long mrb, String message);
 	private static native void n_bug(long mrb, String message);
-	
+	private static native Value n_jobjectMake(long mrb, Object obj);
 	private static native Value n_yield(long mrb, Value v, Value blk);
 	private static native Value n_yieldArgv(long mrb, Value b, int argc, Value[] argv);
 	private static native Value n_classNewInstance(long mrb, int argc, Value[] argv, long c);

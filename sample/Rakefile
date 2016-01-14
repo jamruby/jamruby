@@ -18,10 +18,11 @@ task :run do
   sh "adb shell am force-stop org.hello.mruby && adb shell monkey -p org.hello.mruby 1"
 end
 
-desc "pushes the ./scripts/default.rb to device:///sdcard/"
-task :push do
+desc "pushes the ./scripts/<name ||= 'default'>.rb to device:///sdcard/"
+task :push, [:name] do |t,args|
+  f = args.with_defaults({:name=>"default"})[:name]
   sh "adb shell mkdir -p /sdcard/jamruby/scripts"
-  sh "adb push scripts/default.rb /sdcard/jamruby/scripts/default.rb"
+  sh "adb push scripts/#{f}.rb /sdcard/jamruby/scripts/default.rb"
 end
 
 desc "Clean, create debug apk, install apk, push ruby file, run's the app"
