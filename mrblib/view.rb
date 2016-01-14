@@ -6,6 +6,7 @@ module JamRuby
   class View < Org::Jamruby::Ext::JamView
     def initialize context
       @dlg = Org::Jamruby::Ext::JamView.new(context, to_java(self)).jobj
+      extend JamRuby::NativeView
     end
     
     def on_draw canvas

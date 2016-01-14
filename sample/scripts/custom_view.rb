@@ -2,7 +2,6 @@ begin
   java.import "android/graphics/Paint"  
   java.import "android/graphics/Color"  
   java.import "android/graphics/RectF"     
-  java.import "android/view/MotionEvent"  
 
   class CircleView < JamRuby::View
     def initialize context, fill=:blue, stroke=:red, pct=0.25
@@ -66,6 +65,8 @@ begin
       return x1,y1,x2,y2
     end
     
+    # Return true if point x,y is in the rectangle of the oval
+    # i'm not excluding points outside the actual .,circle
     def contains x,y
       x1,  y1,  x2,  y2  = get_virtual_rect
       
@@ -84,6 +85,7 @@ begin
         if contains(event.getX, event.getY)    
           toggle_colors
           postInvalidate
+          performClick
         end
       end
     rescue => e
@@ -93,6 +95,9 @@ begin
   
 
   cv = CircleView.new(activity, :blue, :white, 0.33)
+  cv.setOnClickListener do
+    toast "Hello!"
+  end
   
   activity.setContentView cv
 rescue => e
