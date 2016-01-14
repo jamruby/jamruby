@@ -1,4 +1,5 @@
-java.import "android/graphics/Canvas"       
+java.import "android/graphics/Canvas"  
+java.import "android/view/MotionEvent"       
 java.import "org/jamruby/ext/JamView"
 
 module JamRuby
