@@ -22,5 +22,11 @@ class JamView < View
     r.send "on_draw", ol
   end
   
- 
+  def onTouchEvent e
+    ol = ObjectList.new
+    ol.add e
+    
+    r.send "on_touch_event", ol
+    true
+  end
 end

@@ -15,12 +15,12 @@ task :default => :build
 desc "installs mrblibs to device:///sdcard/"
 task :push do
   sh "adb shell mkdir -p /sdcard/jamruby/mrblib"
-  sh "adb push ./mrblib/core.mrb /sdcard/jamruby/mrblib/"
+  sh "adb push ./mrblib/jamruby.mrb /sdcard/jamruby/mrblib/"
   sh "adb push ./mrblib/activity.mrb /sdcard/jamruby/mrblib/"  
 end
 
 desc "compiles mrblibs in ./mrbib/"
 task :mrblib do
-  sh "../mruby/build/host/bin/mrbc ./mrblib/core.rb"
-  sh "../mruby/build/host/bin/mrbc ./mrblib/activity.rb"  
+  sh "cd mrblib && ../../mruby/build/host/bin/mrbc -o jamruby.mrb core.rb jamruby.rb kernel.rb bridge.rb native_list.rb native_view.rb native_object.rb native_wrapper.rb init.rb message_handler.rb thread.rb view.rb"  
+  sh "../mruby/build/host/bin/mrbc mrblib/activity.rb"
 end

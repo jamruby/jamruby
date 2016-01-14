@@ -18,7 +18,7 @@ task :run do
   sh "adb shell am force-stop org.hello.mruby && adb shell monkey -p org.hello.mruby 1"
 end
 
-desc "pushes the ./scripts/<name ||= 'default'>.rb to device:///sdcard/"
+desc "pushes the ./scripts/<name ||= 'default'>.rb to device:///sdcard/jamruby/scripts/default.rb"
 task :push, [:name] do |t,args|
   f = args.with_defaults({:name=>"default"})[:name]
   sh "adb shell mkdir -p /sdcard/jamruby/scripts"

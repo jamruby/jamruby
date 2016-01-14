@@ -92,7 +92,6 @@ class Util
   
   def self.classForName(name:String):Class
     begin
-      p name
       Class.forName(name)
     rescue => e
       p e

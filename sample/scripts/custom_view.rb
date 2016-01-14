@@ -1,31 +1,10 @@
 begin
-  java.import("android/widget/TextView")
-  java.import "android/widget/Button"
-  java.import "android/widget/LinearLayout"
   java.import "android/graphics/Paint"  
   java.import "android/graphics/Color"  
-  java.import "android/graphics/RectF"   
-  java.import "android/graphics/Canvas"       
-  java.import "org/jamruby/ext/JamView"
-  class CustomView < Org::Jamruby::Ext::JamView
-    def initialize context
-      @dlg = Org::Jamruby::Ext::JamView.new(context, to_java(self)).jobj
-    end
-    
-    def on_draw canvas
-      # void
-    end
+  java.import "android/graphics/RectF"     
+  java.import "android/view/MotionEvent"  
 
-    def on_measure w,h
-      setMeasuredDimension w,h
-    end
-    
-    def self.new context,*o
-      _new(context, *o)
-    end
-  end
-
-  class CircleView < CustomView
+  class CircleView < JamRuby::View
     def initialize context, fill=:blue, stroke=:red, pct=0.25
       super context
       @fill = Android::Graphics::Color.const_get(:"#{fill.to_s.upcase}")
@@ -85,6 +64,30 @@ begin
       y2 = vx2 + dif_y      
       
       return x1,y1,x2,y2
+    end
+    
+    def contains x,y
+      x1,  y1,  x2,  y2  = get_virtual_rect
+      
+      (x1 <= x and x2 >= x) and (y1 <= y and y2 >= y)
+    end
+    
+    def toggle_colors
+      s,f = @stroke, @fill
+      @fill = s
+      @stroke = f
+    end
+    
+    def on_touch_event(event)
+      event = Android::View::MotionEvent.wrap event
+      if event.getAction == Android::View::MotionEvent::ACTION_DOWN
+        if contains(event.getX, event.getY)    
+          toggle_colors
+          postInvalidate
+        end
+      end
+    rescue => e
+      p e
     end
   end
   

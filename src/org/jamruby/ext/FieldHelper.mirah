@@ -6,9 +6,10 @@ class FieldHelper
   @@TEST=3
   def self.getField(cls:Class, name:String):Integer
   begin
+    Util.p "field: #{name}"
     return Integer(cls.getField(name).get(nil));
   rescue => e
-    Util.p e
+    Util.p "FieldError: #{e}"
     return nil
   end
   end
