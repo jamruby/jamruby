@@ -32,9 +32,8 @@ class JamActivity < Activity
     @@instance = self
     
     @jamruby = Jamruby.new
-    
-    loadCompiled("#{root}/mrblib/jamruby.mrb")
-    loadCompiled("#{root}/mrblib/activity.mrb")  
+    loadCompiled(jamruby.state, "#{root}/mrblib/activity.mrb") 
+    loadCompiled(jamruby.state, "#{root}/mrblib/view.mrb") 
   end
   
   def root:String
@@ -65,15 +64,23 @@ class JamActivity < Activity
     Toast.makeText(a, m, 500).show
   end
   
-  def loadCompiled pth:String
+  def loadCompiledFull mrb:long, pth:String
     Log.i("jamapp", "mrbib: #{pth}")
-    MRuby.loadIrep(jamruby.state, pth)
+    MRuby.loadIrep(mrb, pth)
     Log.i("jamapp", "mrbib: #{pth} OK?")    
   end
   
-  def loadScript(pth:String)
+  def loadScriptFull(mrb:long, pth:String)
     script = Util.readFile(pth)
-    Log.i("jamapp", jamruby.loadString(script).toString)
+    Log.i("jamapp", MRuby.loadString(mrb, script).toString)
+  end
+  
+  def loadScript mrb:State, pth:String
+    loadScriptFull mrb.nativeObject, pth
+  end
+  
+  def loadCompiled mrb:State, pth:String
+    loadCompiledFull mrb.nativeObject, pth
   end
   
   def checkInstall:boolean
@@ -96,5 +103,9 @@ class JamActivity < Activity
     
     inputStream = am.open("mrblib/view.mrb");
     Util.createFileFromInputStream("#{root}/mrblib/view.mrb", inputStream);          
+  end
+
+  def self.initThread(mrb:long):void
+    getInstance.loadCompiledFull(mrb, "#{getInstance.root}/mrblib/jamruby.mrb")  
   end
 end  

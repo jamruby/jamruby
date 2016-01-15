@@ -10,3 +10,17 @@ java.import "org/jamruby/ext/UIRunner"
 java.import "org/jamruby/ext/ProcProxy" 
    
 java.import "org/jamruby/ext/JamActivity"
+
+class Object
+  alias :__jam_require__ :require
+  def require w
+    q = w.split(".").last
+    if q == "rb"
+      activity.loadScriptFull __mrb_context__, w
+    elsif q == "mrb"
+      activity.loadCompiledFull __mrb_context__, w
+    else
+      __jam_require__ w
+    end
+  end
+end

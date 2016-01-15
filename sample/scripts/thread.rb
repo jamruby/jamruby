@@ -27,13 +27,13 @@ begin
   ll.setOrientation :vertical
   
   tv = Android::Widget::TextView.new(activity)
-  p 5
+  
   b=Android::Widget::Button.new(activity)
   b.setText "Click Me!"  
   b.setOnClickListener() do |v|
     tst = toast "ouch!"
   end
-p 6
+
   ll.addView(tv, param)
   ll.addView(b)
   

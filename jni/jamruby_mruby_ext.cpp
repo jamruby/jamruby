@@ -922,6 +922,7 @@ static void* mrb_thread_func(void* data) {
   mrb_mruby_thread_init(context->mrb);
 
   
+  
   context->result = mrb_yield_with_class(mrb, mrb_obj_value(context->proc),
                                          context->argc, context->argv, mrb_nil_value(), mrb->object_class);
   context->alive = FALSE;
@@ -1320,11 +1321,23 @@ mrb_value jam_to_java(mrb_state* mrb, mrb_value self) {
 	return mrb_nil_value();
 }
 
+mrb_value jam_get_mrb(mrb_state* mrb, mrb_value self) {
+  jlong ptr = jlong(mrb);
+  
+  jni_type_t const type = org::jamruby::get_return_type("()J");
+  jvalue ret;
+  ret.j = ptr;
+  
+  mrb_value ro =  org::jamruby::convert_jvalue_to_mrb_value(mrb, getEnv(), type, ret);
+
+  return ro;  
+}
 
 void mrb_mruby_thread_init(mrb_state* mrb) {
   RClass *clsKern = mrb_class_get(mrb, "Object");
   mrb_define_method(mrb, clsKern, "proxy", jam_proxy, MRB_ARGS_REQ(1));
   mrb_define_method(mrb, clsKern, "to_java", jam_to_java, MRB_ARGS_REQ(1));
+  mrb_define_method(mrb, clsKern, "__mrb_context__", jam_get_mrb, MRB_ARGS_NONE());  
   struct RClass *_class_thread, *_class_mutex, *_class_queue;
 
   _class_thread = mrb_define_class(mrb, "Thread", mrb->object_class);
@@ -1361,4 +1374,14 @@ void mrb_mruby_thread_init(mrb_state* mrb) {
   mrb_define_method(mrb, _class_queue, "size", mrb_queue_size, MRB_ARGS_NONE());
   mrb_define_method(mrb, _class_queue, "num_waiting", mrb_queue_num_waiting, MRB_ARGS_NONE());
   mrb_define_method(mrb, _class_queue, "empty?", mrb_queue_empty_p, MRB_ARGS_NONE());
+
+  safe_jni::safe_local_ref<jclass> vclazz(getEnv(), findClass("org/jamruby/ext/JamActivity"));
+	if (!vclazz) {
+		LOGE("THREAD_INIT: NO FIND CLASS");
+	} else {
+		
+	  jmethodID m_thread_init = getEnv()->GetStaticMethodID(vclazz.get(), "initThread", "(J)V");
+	 
+    getEnv()->CallStaticVoidMethod(vclazz.get(), m_thread_init, jlong(mrb));	
+  }
 }

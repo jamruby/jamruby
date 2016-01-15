@@ -13,22 +13,6 @@ begin
   activity.setHandler(
     TOP_MRB_HANDLER
   )  
-  
-  class Object
-    alias :__jam_require__ :require
-    def require w
-      q = w.split(".").last
-      if q == "rb"
-        activity.loadScript w
-      elsif q == "mrb"
-        activity.loadCompiled w
-      else
-        __jam_require__ w
-      end
-    end
-  end
-  
-  require "#{activity.root}/mrblib/view.mrb"
 rescue => e
   JAVA::Android::Util::Log.e("activity.mrb", "Error: #{e}")
   $r = e

@@ -13,6 +13,14 @@ class RubyObject
     @ins = ins
   end
   
+  def mrb
+    @mrb
+  end 
+  
+  def ins
+    @ins
+  end
+  
   def self.create mrb:long, ins:Value
     RubyObject.new(mrb, ins)
   end

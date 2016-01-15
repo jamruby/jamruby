@@ -20,7 +20,15 @@ public class MRuby {
   
 	public static int loadIrep(State state, String pth) throws FileNotFoundException {
 		return n_loadIrep(state.nativeObject(), pth);
-	}  
+	}
+  
+	public static Value loadString(long state, String code) {
+		return n_loadString(state, code);
+	}
+  
+	public static int loadIrep(long state, String pth) throws FileNotFoundException {
+		return n_loadIrep(state, pth);
+	}     
   
 	public static int loadIrep(State state, File f) throws FileNotFoundException {
 		return n_loadIrep(state.nativeObject(), f.getAbsolutePath());
@@ -157,6 +165,10 @@ public class MRuby {
 	public static Value funcallArgv(State state, Value self, String name, int argc, Value[] argv) {
 		return n_funcallArgv(state.nativeObject(), self, name, argc, argv);
 	}  
+  
+	public static Value funcallArgv(long state, Value self, String name, int argc, Value[] argv) {
+		return n_funcallArgv(state, self, name, argc, argv);
+	}   
   
   public static Value jobjectMake(State state, Object obj) {
     return n_jobjectMake(state.nativeObject(), obj);
