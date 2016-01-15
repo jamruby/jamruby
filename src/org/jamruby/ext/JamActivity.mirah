@@ -22,10 +22,8 @@ import MessageHandler
 
 class JamActivity < Activity
   @@instance = JamActivity(nil)
-  def onCreate(c:Bundle, cls:Class):void
-    super c
-    
-    @cls = cls
+  def onCreate state 
+    super state
     
     if !checkInstall
       install
@@ -54,6 +52,10 @@ class JamActivity < Activity
   def jamruby
     @jamruby
   end
+  
+  def setActivityClass c:Class
+    @cls = c
+  end 
   
   def self.getInstance():JamActivity
     @@instance

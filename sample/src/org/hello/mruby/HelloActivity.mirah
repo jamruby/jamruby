@@ -4,8 +4,10 @@ import org.jamruby.ext.JamActivity
 
 class HelloActivity < JamActivity    
   def onCreate(state)
+    setActivityClass self.class    
+    
     super state
     
-    loadScript("/sdcard/jamruby/scripts/default.rb")
+    loadScript("#{root}/main.rb")
   end
 end
