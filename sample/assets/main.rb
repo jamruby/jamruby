@@ -20,26 +20,26 @@ begin
     end
     
     def draw_fill canvas
-			pt = Android::Graphics::Paint.new();
-			pt.setAntiAlias(true);
-			pt.setColor(@fill);
+      pt = Android::Graphics::Paint.new();
+      pt.setAntiAlias(true);
+      pt.setColor(@fill);
       e = Org::Jamruby::Ext::Util.enums(Org::Jamruby::Ext::Util.classForName("android.graphics.Paint$Style"))
-			pt.setStyle(e.get(2)); 
+      pt.setStyle(e.get(2)); 
       
       # draw centered circle 
-			canvas.drawOval(Android::Graphics::RectF.new(*get_virtual_rect), pt)     
+      canvas.drawOval(Android::Graphics::RectF.new(*get_virtual_rect), pt)     
     end
     
     def draw_stroke canvas
       pt = Android::Graphics::Paint.new();
-			pt.setAntiAlias(true);
-			pt.setColor(@stroke);
+      pt.setAntiAlias(true);
+      pt.setColor(@stroke);
       e = Org::Jamruby::Ext::Util.enums(Org::Jamruby::Ext::Util.classForName("android.graphics.Paint$Style"))
-			pt.setStyle(e.get(1)); 
-			pt.setStrokeWidth(4.5);
+      pt.setStyle(e.get(1)); 
+      pt.setStrokeWidth(4.5);
       
       # draw centered circle 
-			canvas.drawOval(Android::Graphics::RectF.new(*get_virtual_rect), pt)      
+      canvas.drawOval(Android::Graphics::RectF.new(*get_virtual_rect), pt)      
     end
     
     def get_virtual_rect
