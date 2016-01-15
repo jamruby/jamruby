@@ -5,10 +5,11 @@ end
 
 desc "Compiles classes and builds DEBUG apk file"
 task :debug do
+  sh "cp -rf ../assets/* assets/"
   sh "ant debug"
 end
 
-desc "Installs to a device/emulator (NEEDS ../mrblib/*.mrb at /sdcard/ ie: cd ../ && rake push)"
+desc "Installs to a device/emulator"
 task :install do
   sh "adb install -r bin/*debug.apk"
 end
@@ -18,15 +19,15 @@ task :run do
   sh "adb shell am force-stop org.hello.mruby && adb shell monkey -p org.hello.mruby 1"
 end
 
-desc "pushes the ./scripts/<name ||= 'default'>.rb to device:///sdcard/jamruby/scripts/default.rb"
-task :push, [:name] do |t,args|
-  f = args.with_defaults({:name=>"default"})[:name]
-  sh "adb shell mkdir -p /sdcard/jamruby/scripts"
-  sh "adb push scripts/#{f}.rb /sdcard/jamruby/scripts/default.rb"
+desc "copy  ./scripts/<name ||= 'custom_view'>.rb to assets/main.rb"
+task :main, [:name] do |t,args|
+  f = args.with_defaults({:name=>"custom_view"})[:name]
+  sh "mkdir -p assets/"
+  sh "cp scripts/#{f}.rb assets/main.rb"
 end
 
 desc "Clean, create debug apk, install apk, push ruby file, run's the app"
-task :all => [:clean, :debug, :install, :push, :run] do
+task :all => [:clean, :debug, :install, :run] do
   
 end
 

@@ -28,7 +28,7 @@ begin
     end
   end
   
-  require "/sdcard/jamruby/mrblib/ui.mrb"
+  require "#{activity.root}/mrblib/view.mrb"
 rescue => e
   JAVA::Android::Util::Log.e("activity.mrb", "Error: #{e}")
   $r = e

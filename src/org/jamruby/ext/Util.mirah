@@ -6,6 +6,7 @@ import java.util.ArrayList
 import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintStream
+import java.io.InputStream
 
 import org.jamruby.mruby.Value;
 import org.jamruby.mruby.State
@@ -143,5 +144,28 @@ class Util
     Log.i "jamapp", "Make Value: #{i}"  
     
     return va
-  end      
+  end   
+
+  def self.createFileFromInputStream(path:String, inputStream:InputStream):File
+    f = File.new(path);
+    outputStream = FileOutputStream.new(f);
+    
+    begin
+      buffer = byte[1024]
+      length = 0;
+
+      while ((length=inputStream.read(buffer)) > 0)
+        outputStream.write(buffer,0,length);
+      end
+
+      outputStream.close();
+      inputStream.close();
+
+      return f;
+    rescue => e
+      outputStream.close();
+      inputStream.close();
+      return nil;
+    end
+  end     
 end

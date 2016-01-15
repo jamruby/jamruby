@@ -1,10 +1,14 @@
+package org.jamruby.ext
+
+import android.os.Bundle
 import android.app.Activity
 import android.os.Handler
 import android.os.Looper
+import android.os.Environment
 import android.widget.Toast
 import android.util.Log
-
-package org.jamruby.ext
+import java.io.File
+import java.io.InputStream
 
 import org.jamruby.core.Jamruby
 import org.jamruby.mruby.MRuby
@@ -18,14 +22,25 @@ import MessageHandler
 
 class JamActivity < Activity
   @@instance = JamActivity(nil)
-  def onCreate c
+  def onCreate(c:Bundle, cls:Class):void
     super c
+    
+    @cls = cls
+    
+    if !checkInstall
+      install
+    end
     
     @@instance = self
     
     @jamruby = Jamruby.new
     
-    loadCompiled("/sdcard/jamruby/mrblib/activity.mrb")
+    loadCompiled("#{root}/mrblib/jamruby.mrb")
+    loadCompiled("#{root}/mrblib/activity.mrb")  
+  end
+  
+  def root:String
+    Environment.getExternalStorageDirectory.toString+"/jamruby/"+@cls.getPackage.getName
   end
   
   def setHandler prx:MessageRunner
@@ -55,11 +70,29 @@ class JamActivity < Activity
   end
   
   def loadScript(pth:String)
-    n = self
-   # runOnUiThread do   
-      script = Util.readFile(pth)
-
-      Log.i("jamapp", n.jamruby.loadString(script).toString)
- #   end
+    script = Util.readFile(pth)
+    Log.i("jamapp", jamruby.loadString(script).toString)
   end
-end
+  
+  def checkInstall:boolean
+    File.new(root).exists
+  end
+  
+  def install
+    File.new("#{root}").mkdirs
+    File.new("#{root}/mrblib").mkdirs  
+      
+    am = getAssets();
+    inputStream = am.open("main.rb");
+    Util.createFileFromInputStream("#{root}/main.rb", inputStream);
+    
+    inputStream = am.open("mrblib/jamruby.mrb");
+    Util.createFileFromInputStream("#{root}/mrblib/jamruby.mrb", inputStream);   
+    
+    inputStream = am.open("mrblib/activity.mrb");
+    Util.createFileFromInputStream("#{root}/mrblib/activity.mrb", inputStream); 
+    
+    inputStream = am.open("mrblib/view.mrb");
+    Util.createFileFromInputStream("#{root}/mrblib/view.mrb", inputStream);          
+  end
+end  
