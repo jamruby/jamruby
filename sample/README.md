@@ -24,6 +24,5 @@ See `rake -T`
   rake debug
 
   # rake install
-  # rake push
   # rake run
 ```
