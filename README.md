@@ -51,13 +51,11 @@ git clone https://github.com/ppibburr/jamruby
 
 # jruby -S gem i mirah
 
-cd jamruby
-rake
 
-## compiles mrblibs
-# rake mrblib
-## installs mrblibs to device
-# rake push
+cd jamruby
+
+## See 'rake -T'
+rake
 ```
 
 Using

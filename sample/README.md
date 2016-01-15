@@ -1,13 +1,7 @@
 Sample JAMRUBY Application
 ===
 
-Loads ruby file from /sdcard/ and creates `Activity`.  
-`Activity` will have a `LinearLayout` set to `VERTICAL`  
-`LinearLayout` will have a `TextView` that fills extra space.  
-`LinearLayout` will have a `Button` with `OnClickListener`  
-`Button` will `toast` a message when clicked.  
-
-A `Thread` will be ran that updates `TextView` displaying how many times the loop in the `Thread` ran.     
+Edit `/sdcard/jamruby/org.hello.mruby/main.rb` on device to modify without reinstall    
 
 ![alt tag](https://raw.githubusercontent.com/ppibburr/jamruby/master/sample/screen.png)
 
@@ -24,13 +18,12 @@ Build
 See `rake -T`
 
 ```
+  ## Set the ruby file to run. defaults to 'custom_view'
+  # rake main[<name>]
+
   rake debug
-  
+
   # rake install
   # rake push
-  
-  ### cd .. && rake mrblib && cd sample
-  ## cd .. && rake push && cd sample
-  
   # rake run
 ```
