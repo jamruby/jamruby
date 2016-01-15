@@ -15,25 +15,25 @@ import org.jamruby.mruby.MRuby
 import android.util.Log
 
 class Util
-	def self.readFile(pathname:String)
+  def self.readFile(pathname:String)
 
-		file = File.new(pathname);
-		fileContents = StringBuilder.new(int(file.length()));
-		scanner = Scanner.new(file);
-		lineSeparator = System.getProperty("line.separator");
+    file = File.new(pathname);
+    fileContents = StringBuilder.new(int(file.length()));
+    scanner = Scanner.new(file);
+    lineSeparator = System.getProperty("line.separator");
 
-		begin
-			while(scanner.hasNextLine())        
-				fileContents.append(scanner.nextLine() + lineSeparator);
-			end
-			
-			return fileContents.toString();
-		rescue
-			scanner.close();
-			
-			return ""
-		end
-	end
+    begin
+      while(scanner.hasNextLine())        
+        fileContents.append(scanner.nextLine() + lineSeparator);
+      end
+      
+      return fileContents.toString();
+    rescue
+      scanner.close();
+      
+      return ""
+    end
+  end
   
   def self.writeFile(pth:String, content:String):void
       os = FileOutputStream.new(pth);
