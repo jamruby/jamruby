@@ -84,10 +84,11 @@ class JamActivity < Activity
   end
   
   def checkInstall:boolean
-    File.new(root).exists
+    File.new(getFilesDir.toString+"/i").exists
   end
   
   def install
+    File.new("#{getFilesDir}/i").mkdir
     File.new("#{root}").mkdirs
     File.new("#{root}/mrblib").mkdirs  
       

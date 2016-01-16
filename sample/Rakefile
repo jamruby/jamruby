@@ -5,12 +5,13 @@ end
 
 desc "Compiles classes and builds DEBUG apk file"
 task :debug do
-  sh "cp -rf ../assets/* assets/"
+  sh "cp -rf ../assets/* assets/" 
   sh "ant debug"
 end
 
 desc "Installs to a device/emulator"
 task :install do
+  sh "adb uninstall org.hello.mruby"
   sh "adb install -r bin/*debug.apk"
 end
 
