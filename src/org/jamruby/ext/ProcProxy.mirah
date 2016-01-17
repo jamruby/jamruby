@@ -49,7 +49,7 @@ class ProcProxyInvocationHander
     end
              
 
-      if a.get(0).kind_of?(ArrayList) and a.size == 1    
+      if a.size == 1 and a.get(0).kind_of?(ArrayList)    
         va = Util.arrayListToValueArray(ins.mrb, ArrayList(a.get(0)))
         
         MRuby.funcallArgv(ins.mrb, ins.proc, "call", va.length, va);

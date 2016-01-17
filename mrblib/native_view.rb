@@ -78,9 +78,14 @@ module JamRuby
       end
     end
   
-    def setOnClickListener &b
-      @cb = b
-      super(proxy("android.view.View$OnClickListener", &@cb))
+    def setOnClickListener listener=nil, &b
+      if b
+        super(@cb = JamRuby::OnClickListener.new(&b))
+      elsif listener
+        super @cb = listener
+      else
+        raise "ArgumentError: 1 or Block"
+      end
     end
     
     # @return [UI] wrapper of self whose methods are thread safe

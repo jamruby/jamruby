@@ -13,4 +13,14 @@ class FieldHelper
     return nil
   end
   end
+  
+  def self.hasField(cls:Class, name:String):boolean
+  begin  
+    cls.getField(name)
+    return true
+  rescue => e
+    Util.p e
+    return false
+  end
+  end
 end
