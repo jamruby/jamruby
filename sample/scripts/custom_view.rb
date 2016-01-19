@@ -75,6 +75,7 @@ begin
     
     def toggle_colors
       s,f = @stroke, @fill
+      
       @fill = s
       @stroke = f
       
@@ -99,6 +100,7 @@ begin
   cv = CircleView.new(activity, :red, :gray, 0.33)
   cv.setOnClickListener do
     t = toast "Hello!"
+    
     q.set do
       t.cancel
     end

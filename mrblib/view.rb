@@ -5,7 +5,7 @@ java.import "org/jamruby/ext/JamView"
 module JamRuby
   class View < Org::Jamruby::Ext::JamView
     def initialize context
-      @dlg = Org::Jamruby::Ext::JamView.new(context, to_java(self)).jobj
+      @native = Org::Jamruby::Ext::JamView.new(context, to_java).native
       extend JamRuby::NativeView
     end
     

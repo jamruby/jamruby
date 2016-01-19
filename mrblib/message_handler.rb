@@ -32,10 +32,16 @@ class Org::Jamruby::Ext::MessageHandler
           l.addFlt a
         elsif a.is_a?(String)
           l.addStr a
-        elsif a.is_?(JObject)
+        elsif a.is_a?(JObject)
           l.addObj a
+        elsif a.respond_to?(:native)
+          l.addObj a.native
+        elsif a == true or a == false
+          l.addBool a
+        elsif a == nil
+          l.addNull
         else
-          l.addObj nil
+          l.addObj a.to_java
         end
       end
 

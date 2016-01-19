@@ -7,11 +7,37 @@ class Module
 end
 
 
-class String
+class ::String
   def jmatch str
     p = NativeWrapper.as(JAVA::Java::Util::Regex::Pattern.compile(str), JAVA::Java::Util::Regex::Pattern)
     m = NativeWrapper.as(p.matcher(self), JAVA::Java::Util::Regex::Matcher);
   end
+  
+  def rjust i, s
+    a = i - self.length
+    if a > 0
+      return (s*a)+self
+    end
+    
+    return self
+  end
+  
+  # removes non ascii characters
+  def ascii!(replacement="")
+    n = bytes
+    
+    slice!(0..size)
+    
+    n.each { |b|
+     if b < 33 || b > 127 then
+       concat(replacement)
+     else
+       concat(b.chr)
+     end
+    }
+    
+    to_s
+  end  
 end
 
 class JObject
@@ -19,3 +45,185 @@ class JObject
     what.wrap self
   end
 end 
+
+class Object
+  def to_java
+    _to_java_(self)
+  end
+  
+  # mtuby-thread issue
+  alias :__is_a__ :"is_a?"
+  def is_a?(w)
+    if w == ::String or w == "".class
+      if __is_a__ w
+        return true
+      end
+      
+      w = "".class
+    end
+    
+    __is_a__ w
+  end
+end
+
+class Array
+  def use_integers bool
+    class << self; self; end.define_method "use_integers?" do
+      bool
+    end
+    
+    class << self; self; end.define_method "use_longs?" do
+      !bool
+    end
+  end
+  
+  def use_longs bool
+    class << self; self; end.define_method "use_integers?" do
+      !bool
+    end
+    
+    class << self; self; end.define_method "use_longs?" do
+      bool
+    end    
+  end
+  
+  def use_floats bool 
+    class << self; self; end.define_method "use_doubles?" do
+      !bool
+    end
+    
+    class << self; self; end.define_method "use_floats?" do
+      bool
+    end 
+  end
+  
+  def use_doubles bool
+    class << self; self; end.define_method "use_doubles?" do
+      bool
+    end
+    
+    class << self; self; end.define_method "use_floats?" do
+      !bool
+    end
+  end  
+  
+  def use_floats?
+    true
+  end
+  
+  def use_doubles?
+    false
+  end 
+  
+  def use_integers?
+    true
+  end 
+  
+  def use_longs?
+    false
+  end        
+  
+  def to_object_array
+    to_object_list.toArray
+  end
+  
+  def to_array_list
+    to_object_list
+  end
+  
+  def to_object_list(*o)
+    defaults = {
+                :use_double  => use_doubles?, 
+                :use_integer => use_integers?,
+                :use_float   => use_floats?,
+                :use_long    => use_longs?
+             }
+    
+    if !o[0]
+      o[0] = defaults
+    end
+    
+    unless o[0].is_a? Hash
+      raise "ArgumentError: Hash or none"
+    end
+    
+    opts = o[0]
+    
+    defaults.each_key do |k|
+      opts[k] ||= defaults[k]
+    end
+    
+    ol = Org::Jamruby::Ext::ObjectList.create
+    
+    each do |v|
+      if v.is_a? Integer
+        if opts[:use_integer] == true
+          ol.addInt v
+        else
+          ol.addLng v
+        end
+      elsif v.is_a? Float
+        if opts[:use_double] == true
+          ol.addDbl(v)
+        else
+          ol.addFlt(v)
+        end
+      elsif v.is_a? String
+        ol.addStr v
+      elsif v.is_a? JObject
+        ol.addObj v
+      elsif v.respond_to?(:native)
+        ol.addObj v.native
+      elsif v.is_a? Array
+        ol.addObj v.to_object_array
+      else
+        ol.addObj v.to_java
+      end
+    end
+    
+    ol
+  end
+  
+  private
+  def __check_jammed__
+    unless __jammed__
+      class << self
+        def __jammed__
+          true
+        end
+      end
+      
+      use_integers true
+      use_floats   true      
+    end  
+  end
+  
+  private
+  def __jammed__
+    false
+  end
+end
+
+def on_pause
+  puts "on_pause"
+end
+
+def on_resume
+  puts "on_resume"
+end
+
+def on_stop
+  puts "on_stop"
+end
+
+def on_start
+  puts "on_start"
+end
+
+def on_restart
+  puts "on_restart"
+end
+
+def on_destroy
+
+end

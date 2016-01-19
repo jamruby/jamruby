@@ -87,6 +87,35 @@ class JamActivity < Activity
     File.new(getFilesDir.toString+"/i").exists
   end
   
+  def onStart
+    super
+    topSelfCall("on_start")
+  end
+  
+  def onPause
+    super
+    topSelfCall("on_pause")
+  end  
+  
+  def onDestroy
+    super
+    topSelfCall("on_destroy")
+  end  
+  
+  def onResume
+    super
+    topSelfCall("on_resume")
+  end  
+  
+  def onRestart
+    super
+    topSelfCall("on_restart")
+  end 
+  
+  def topSelfCall method:String       
+    MRuby.funcall(jamruby.state, MRuby.topSelf(jamruby.state), method, 0)
+  end
+  
   def install
     File.new("#{getFilesDir}/i").mkdir
     File.new("#{root}").mkdirs

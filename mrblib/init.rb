@@ -43,7 +43,7 @@ module JamRuby
       end
     end
     
-    def jobj
+    def native
       @proxy
     end
     

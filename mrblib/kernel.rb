@@ -6,7 +6,7 @@ module Kernel
   end
   
   def print *o
-    o.each do |q| JAVA::Android::Util::Log.i("jam_mrblib.mrb", q.inspect) end
+    o.each do |q| JAVA::Android::Util::Log.i("jamruby", q.to_s) end
   end  
   
   def puts *o
@@ -14,7 +14,7 @@ module Kernel
   end
   
   def p *o
-    o.each do |q| print q.inspect end
+    o.each do |q| puts q.inspect end
   end
 
   def activity

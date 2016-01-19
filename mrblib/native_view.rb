@@ -81,10 +81,10 @@ module JamRuby
     def setOnClickListener listener=nil, &b
       if b
         super(@cb = JamRuby::OnClickListener.new(&b))
-      elsif listener
+      elsif listener.is_a? JamRuby::Proxy
         super @cb = listener
       else
-        raise "ArgumentError: 1 or Block"
+        raise "ArgumentError: pass JamRuby::Proxy or provide Block"
       end
     end
     

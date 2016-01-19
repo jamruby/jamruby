@@ -13,6 +13,10 @@ begin
   activity.setHandler(
     TOP_MRB_HANDLER
   )  
+  
+  handler.on :post do |m, *o|
+    send m, *o
+  end  
 rescue => e
   JAVA::Android::Util::Log.e("activity.mrb", "Error: #{e}")
   $r = e

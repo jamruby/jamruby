@@ -61,6 +61,7 @@ class Util
     elsif obj.kind_of?(Float.TYPE)
       Value.new(Float(obj).floatValue)
     elsif obj.kind_of?(CharSequence)
+      Log.i "jamapp", "Make String"
       MRuby.strNew(mrb, String(obj))
     else
       Log.i "jamapp", "Make NIL"
@@ -167,5 +168,9 @@ class Util
       inputStream.close();
       return nil;
     end
-  end     
+  end 
+  
+  def self.objArrayGet(a:Object[], i:int):Object
+    a[i]
+  end    
 end

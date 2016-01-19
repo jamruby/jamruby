@@ -11,7 +11,7 @@ module JamRuby
     end  
     
     def self.classForName(path)
-     JAVA::Org::Jamruby::Ext::Util.classForName(path)
+      JAVA::Org::Jamruby::Ext::Util.classForName(path)
     end
   end
   
@@ -21,19 +21,21 @@ module JamRuby
       pth = self::WRAP::CLASS_PATH.split("/").join(".")
       cls = NativeClassHelper.classForName pth
      
-      if ::JAVA::Org::Jamruby::Ext::FieldHelper.hasField(cls, c.to_s)
-        r = ::JAVA::Org::Jamruby::Ext::FieldHelper.getField(cls, c.to_s)
-        return r
-      end 
-     
       if NativeClassHelper.is_enum? cls
         begin
           v = NativeClassHelper.get_enum(cls, c.to_s)
+          const_set c, v
           return v
         rescue => e
           super
         end
       end
+      
+      if ::JAVA::Org::Jamruby::Ext::FieldHelper.hasField(cls, c.to_s)
+        r = ::JAVA::Org::Jamruby::Ext::FieldHelper.getField(cls, c.to_s)
+        const_set c, r
+        return r
+      end       
       
       super
     end   
@@ -43,9 +45,9 @@ module JamRuby
     end
     
     def __to_str__
-      c=@dlg.jclass
+      c=@native.jclass
       m = c.get_method "toString","()Ljava/lang/String;"
-      c.call @dlg, m
+      c.call @native, m
     end
     
     def inspect
@@ -57,14 +59,14 @@ module JamRuby
     end
     
     def initialize obj
-      @dlg = obj 
+      @native = obj 
       extend JamRuby::NativeView if obj.respond_to?(:setOnClickListener)
     end
     
-    def jobj
-      q = @dlg
-      while q.respond_to?(:jobj)
-        q = q.jobj
+    def native
+      q = @native
+      while q.respond_to?(:native)
+        q = q.native
       end
       
       q
@@ -72,7 +74,7 @@ module JamRuby
     
     def is_a? what
       if what.is_a?(::String)
-        if JAVA::Org::Jamruby::Ext::Util.is_a(self.jobj, what)
+        if JAVA::Org::Jamruby::Ext::Util.is_a(self.native, what)
           return true
         end
         
@@ -123,12 +125,12 @@ module JamRuby
         if static
           res = this::WRAP.send name, *o       
         else  
-          if @dlg.is_a?(this::WRAP)
-            res = @dlg.send name, *o
+          if @native.is_a?(this::WRAP)
+            res = @native.send name, *o
           else
-            c=@dlg.jclass
+            c=@native.jclass
             m=c.get_method(name, sig[1])
-            res = c.call(@dlg, m, *o)
+            res = c.call(@native, m, *o)
           end
         end
           
@@ -141,7 +143,7 @@ module JamRuby
     end
     
     def self.wrap o
-      _new(o.respond_to?(:jobj) ? o.jobj : o)
+      _new(o.respond_to?(:native) ? o.native : o)
     end
     
     class << self
@@ -169,7 +171,7 @@ module JamRuby
           elsif c == "L"
             t.qualified = true
             data = sig.split(";")
-            t.name = data[0][1..-1].split("/").join(".")
+            t.name = data[0][1..-1]
             sig = sig[1] || ""
           end
         else
@@ -197,7 +199,7 @@ module JamRuby
     def self.adjust_args sig, *o,&b
       i = -1
       args = o.map do |q|
-        next q.jobj if q.respond_to?(:jobj)
+        next q.native if q.respond_to?(:native)
 
         i += 1
         if q.is_a? Symbol
@@ -205,12 +207,13 @@ module JamRuby
             const_get :"#{q.to_s.upcase}"
           rescue
             next q unless sig
+            
             type = arg_type(sig, i)
-
-            if type.qualified and NativeClassHelper.is_enum?(cls=NativeClassHelper.classForName(type.name))
-              if (v=NativeClassHelper.get_enum(cls, q)) != nil
-                next v
-              end
+            
+            if type.qualified and NativeClassHelper.is_enum?(NativeClassHelper.classForName(type.name.split("/").join(".")))
+              java.import type.name
+              iface = java.import type.name, true
+              next iface.const_get(:"#{q.to_s.upcase}")
             end
             
             next q
@@ -220,8 +223,12 @@ module JamRuby
         end
       end
       
+      # Create proxy
       if b
-        args << proxy("java.lang.Runnable", &b)
+        type = arg_type(sig, args.length)
+        if type.qualified
+          args << proxy(type.name.split("/").join("."), &b)
+        end
       end
       
       args
