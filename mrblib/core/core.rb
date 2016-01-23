@@ -1,3 +1,4 @@
+GC.generational_mode = false
 class Module
   def implement mod
     class_eval do
@@ -21,6 +22,14 @@ class ::String
     
     return self
   end
+  
+  def uncapitalize 
+    self[0, 1].downcase + self[1..-1]
+  end 
+  
+  def uncapitalize! 
+    self.replace self[0, 1].downcase + self[1..-1]
+  end   
   
   # removes non ascii characters
   def ascii!(replacement="")
@@ -204,26 +213,38 @@ class Array
   end
 end
 
-def on_pause
-  puts "on_pause"
-end
-
-def on_resume
-  puts "on_resume"
-end
-
-def on_stop
-  puts "on_stop"
-end
-
-def on_start
-  puts "on_start"
-end
-
-def on_restart
-  puts "on_restart"
-end
-
-def on_destroy
-
+module JamRuby
+  class Proxy
+    def self.set_class_path path
+      @class_path = path
+    end
+    
+    def self.get_class_path
+      @class_path
+    end
+    
+    def initialize &b
+      set &b
+      
+      @proxy=proxy(self.class.get_class_path) do |*o|
+        @b.call(*o) if @b
+      end
+    end
+    
+    def native
+      @proxy
+    end
+    
+    def set &b
+      @b = b
+    end
+  end
+  
+  class Runnable < Proxy
+    set_class_path "java.lang.Runnable"
+  end
+  
+  class OnClickListener < Proxy
+    set_class_path "android.view.View$OnClickListener"
+  end
 end

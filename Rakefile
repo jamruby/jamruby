@@ -17,7 +17,9 @@ desc "compiles extra mrblibs in ./mrblib/"
 task :libs do
   sh "mkdir -p assets/mrblib"
   sh "rm -f assets/mrblib/*.mrb"
-  sh "../mruby/build/host/bin/mrbc -o assets/mrblib/activity.mrb mrblib/activity.rb"
-  sh "../mruby/build/host/bin/mrbc -o assets/mrblib/view.mrb mrblib/view.rb" 
-  sh "cd mrblib && ../../mruby/build/host/bin/mrbc -o ../assets/mrblib/jamruby.mrb core.rb jamruby.rb kernel.rb bridge.rb native_list.rb native_view.rb native_object.rb native_wrapper.rb init.rb message_handler.rb thread.rb"
+  sh "../mruby/build/host/bin/mrbc -g -o assets/mrblib/activity.mrb mrblib/activity/activity.rb mrblib/activity/view.rb"
+  sh "cd mrblib/core && ../../../mruby/build/host/bin/mrbc -g -o ../../assets/mrblib/core.mrb core.rb jamruby.rb bridge.rb kernel.rb"
+  sh "cd mrblib/jamruby && ../../../mruby/build/host/bin/mrbc -g -o ../../assets/mrblib/jamruby.mrb native_list.rb native_view.rb native_object.rb native_wrapper.rb"
+  sh "cd mrblib/thread && ../../../mruby/build/host/bin/mrbc -g -o ../../assets/mrblib/thread.mrb init.rb"
+
 end

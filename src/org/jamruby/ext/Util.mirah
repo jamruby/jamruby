@@ -14,6 +14,8 @@ import org.jamruby.mruby.MRuby
 
 import android.util.Log
 
+import org.jamruby.ext.JamActivity
+
 class Util
   def self.readFile(pathname:String)
 
@@ -56,9 +58,9 @@ class Util
     if obj.kind_of?(Integer)
       # Log.i "jamapp", "Make INT"
       Value.new(Integer(obj).intValue)
-    elsif obj.kind_of?(Double.TYPE)
+    elsif obj.kind_of?(Double)
       Value.new(Double(obj).doubleValue)
-    elsif obj.kind_of?(Float.TYPE)
+    elsif obj.kind_of?(Float)
       Value.new(Float(obj).floatValue)
     elsif obj.kind_of?(CharSequence)
       Log.i "jamapp", "Make String"
@@ -129,6 +131,10 @@ class Util
     Log.i "jamapp", "Make Value: #{i}"  
     
     return va
+  end
+  
+  def self.sendMain(m:String, ol:ObjectList):void
+    JamActivity.getInstance.sendMain m, ol
   end
   
   def self.objectArrayToValueArray(mrb:State, oa:Object[]):Value[]

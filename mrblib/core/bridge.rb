@@ -1,3 +1,4 @@
+require "java/lang/Class"
 module JamRuby
   module Bridge
     # Binds Java Class to Ruby
@@ -48,7 +49,7 @@ module JamRuby
       return ot.const_get(:"#{sym}") if ot.const_defined?(:"#{sym}")
 
       if t!=::Object and i == a.length
-        ot.const_set(:"#{sym}", cls=Class.new(NativeObject))
+        ot.const_set(:"#{sym}", cls=Class.new(JamRuby::NativeObject))
         
         cls.set_for t
         
@@ -74,7 +75,7 @@ module JamRuby
     #
     # @return [::Org::Jamruby::Ext::ObjectList] 
     def self.get_inner_classes pth
-      o = JAVA::Org::Jamruby::Ext::Util.innerClassesOf(JAVA::Org::Jamruby::Ext::Util.classForName(pth.split("/").join(".")))
+      o = JAVA::Org::Jamruby::Ext::Util.innerClassesOf(JamRuby::NativeClassHelper.classForName(pth.split("/").join(".")))
       o.extend NativeList
       o
     end

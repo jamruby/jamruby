@@ -228,65 +228,65 @@ static RClass* define_class(mrb_state *mrb, JNIEnv *env, RClass *parent, jclass 
 	jobject obj = static_cast<jobject>(cls);
 
 	// get public constructors
-	safe_jni::method<jobjectArray> get_constructors(getEnv(), obj, "getConstructors", "()[Ljava/lang/reflect/Constructor;");
+	safe_jni::method<jobjectArray> get_constructors(env, obj, "getConstructors", "()[Ljava/lang/reflect/Constructor;");
 	if (!get_constructors) {
-		getEnv()->ExceptionClear();
+		env->ExceptionClear();
 		LOGE("cannot find 'getConstructors()' method in JVM.");
 		return NULL;
 	}
 
-	safe_jni::safe_local_ref<jobjectArray> rctors(getEnv(), get_constructors(obj));
+	safe_jni::safe_local_ref<jobjectArray> rctors(env, get_constructors(obj));
 	if (!rctors) {
-		getEnv()->ExceptionClear();
+		env->ExceptionClear();
 		LOGE("cannot get public constructors.");
 		return NULL;
 	}
-	safe_jni::safe_object_array ctors(getEnv(), rctors.get());
+	safe_jni::safe_object_array ctors(env, rctors.get());
 	size_t const num_of_ctors = ctors.size();
 
 	// get public methods
-	safe_jni::method<jobjectArray> get_methods(getEnv(), obj, "getMethods", "()[Ljava/lang/reflect/Method;");
+	safe_jni::method<jobjectArray> get_methods(env, obj, "getMethods", "()[Ljava/lang/reflect/Method;");
 	if (!get_methods) {
-		getEnv()->ExceptionClear();
+		env->ExceptionClear();
 		LOGE("cannot find 'getMethods()' method in JVM.");
 		return NULL;
 	}
 
-	safe_jni::safe_local_ref<jobjectArray> ret(getEnv(), get_methods(obj));
+	safe_jni::safe_local_ref<jobjectArray> ret(env, get_methods(obj));
 	if (!ret) {
-		getEnv()->ExceptionClear();
+		env->ExceptionClear();
 		LOGE("cannot get public methods.");
 		return NULL;
 	}
-	safe_jni::safe_object_array methods(getEnv(), ret.get());
+	safe_jni::safe_object_array methods(env, ret.get());
 	size_t const num_of_methods = methods.size();
 	if (0 == num_of_methods) {
 		LOGW("'%s' has no methods.", name.c_str());
 		return NULL;
 	}
 
-	safe_jni::safe_local_ref<jclass> modifier_class(getEnv(), findClass("java/lang/reflect/Modifier"));
+	safe_jni::safe_local_ref<jclass> modifier_class(env, findClass("java/lang/reflect/Modifier"));
 	if (!modifier_class) {
 		LOGE("cannot find class 'java.lang.reflect.Modifier' in JVM.");
 		return NULL;
 	}
-	safe_jni::method<bool> is_static(getEnv(), modifier_class.get(), "isStatic", "(I)Z");
+	safe_jni::method<bool> is_static(env, modifier_class.get(), "isStatic", "(I)Z");
 	if (!is_static) {
 		LOGE("cannot find method 'isStatic'.");
 		return NULL;
 	}
 
-	safe_jni::safe_local_ref<jclass> method_signature_class(getEnv(), findClass("org/jamruby/java/MethodSignature"));
+	safe_jni::safe_local_ref<jclass> method_signature_class(env, findClass("org/jamruby/java/MethodSignature"));
 	if (!method_signature_class) {
 		LOGE("cannot find class 'org.jamruby.java.MethodSignature' in JVM.");
 		return NULL;
 	}
-	safe_jni::method<jstring> gen_method_signature(getEnv(), method_signature_class.get(), "genMethodSignature", "(Ljava/lang/reflect/Method;)Ljava/lang/String;");
+	safe_jni::method<jstring> gen_method_signature(env, method_signature_class.get(), "genMethodSignature", "(Ljava/lang/reflect/Method;)Ljava/lang/String;");
 	if (!gen_method_signature) {
 		LOGE("cannot find method 'genMethodSignature'.");
 		return NULL;
 	}
-	safe_jni::method<jstring> gen_ctor_signature(getEnv(), method_signature_class.get(), "genCtorSignature", "(Ljava/lang/reflect/Constructor;)Ljava/lang/String;");
+	safe_jni::method<jstring> gen_ctor_signature(env, method_signature_class.get(), "genCtorSignature", "(Ljava/lang/reflect/Constructor;)Ljava/lang/String;");
 	if (!gen_ctor_signature) {
 		LOGE("cannot find method 'genCtorSignature'.");
 		return NULL;
@@ -298,7 +298,7 @@ static RClass* define_class(mrb_state *mrb, JNIEnv *env, RClass *parent, jclass 
 		return NULL;
 	}
 
-	jclass gref_cls = static_cast<jclass>(getEnv()->NewGlobalRef(cls));
+	jclass gref_cls = static_cast<jclass>(env->NewGlobalRef(cls));
 	if (NULL == gref_cls) {
 		LOGE("cannot create global reference.");
 		return NULL;
@@ -310,23 +310,23 @@ static RClass* define_class(mrb_state *mrb, JNIEnv *env, RClass *parent, jclass 
     mrb_value sm = mrb_ary_new(mrb);
     
 	for (size_t i = 0; i < num_of_ctors; ++i) {
-		safe_jni::safe_local_ref<jobject> c(getEnv(), ctors.get(i));
-		safe_jni::safe_local_ref<jstring> js_signature(getEnv(), gen_ctor_signature(method_signature_class.get(), c.get()));
-		safe_jni::safe_string signature(getEnv(), js_signature.get());
+		safe_jni::safe_local_ref<jobject> c(env, ctors.get(i));
+		safe_jni::safe_local_ref<jstring> js_signature(env, gen_ctor_signature(method_signature_class.get(), c.get()));
+		safe_jni::safe_string signature(env, js_signature.get());
 		context->register_ctor_signature(target, signature.string());
-		LOGE("register constructor: <init>%s", signature.string());
+		LOGD("register constructor: <init>%s", signature.string());
 	}
 
 	for (size_t i = 0; i < num_of_methods; ++i) {
-		safe_jni::safe_local_ref<jobject> m(getEnv(), methods.get(i));
-		safe_jni::method<jstring> get_name(getEnv(), m.get(), "getName", "()Ljava/lang/String;");
-		safe_jni::safe_local_ref<jstring> mname(getEnv(), get_name(m.get()));
-		safe_jni::safe_string mname_str(getEnv(), mname.get());
+		safe_jni::safe_local_ref<jobject> m(env, methods.get(i));
+		safe_jni::method<jstring> get_name(env, m.get(), "getName", "()Ljava/lang/String;");
+		safe_jni::safe_local_ref<jstring> mname(env, get_name(m.get()));
+		safe_jni::safe_string mname_str(env, mname.get());
 
-		safe_jni::safe_local_ref<jstring> js_signature(getEnv(), gen_method_signature(method_signature_class.get(), m.get()));
-		safe_jni::safe_string signature(getEnv(), js_signature.get());
+		safe_jni::safe_local_ref<jstring> js_signature(env, gen_method_signature(method_signature_class.get(), m.get()));
+		safe_jni::safe_string signature(env, js_signature.get());
 
-		safe_jni::method<int> get_modifiers(getEnv(), m.get(), "getModifiers", "()I");
+		safe_jni::method<int> get_modifiers(env, m.get(), "getModifiers", "()I");
 		if (!get_modifiers) {
 			LOGW("cannot find 'getModifiers' method.");
 			break;
@@ -339,7 +339,7 @@ static RClass* define_class(mrb_state *mrb, JNIEnv *env, RClass *parent, jclass 
 				continue;
 			}
 
-			LOGE("define class method '%s::%s : %s'.", name.c_str(), mname_str.string(), signature.string());
+			LOGD("define class method '%s::%s : %s'.", name.c_str(), mname_str.string(), signature.string());
 			mrb_define_class_method(mrb, target, mname_str.string(), java_class_method, MRB_ARGS_ANY());
 			mrb_value m = mrb_ary_new(mrb);
 			
@@ -354,7 +354,7 @@ static RClass* define_class(mrb_state *mrb, JNIEnv *env, RClass *parent, jclass 
 				continue;
 			}
 
-			LOGE("define instance method '%s.%s : %s'.", name.c_str(), mname_str.string(), signature.string());
+			LOGD("define instance method '%s.%s : %s'.", name.c_str(), mname_str.string(), signature.string());
 			mrb_define_method(mrb, target, mname_str.string(), java_object_method, MRB_ARGS_ANY());
 			
 			mrb_value m = mrb_ary_new(mrb);
@@ -558,7 +558,7 @@ mrb_thread_context_free(mrb_state *mrb, void *p) {
   if (p) {
 
     mrb_thread_context* context = (mrb_thread_context*) p;
-    
+    LOGE(":FREE");
 
     if (context->mrb && context->mrb != mrb) mrb_close(context->mrb);
     pthread_kill(context->thread, SIGINT);
@@ -947,7 +947,7 @@ mrb_thread_init(mrb_state* mrb, mrb_value self) {
     int i, l;
     mrb_thread_context* context = (mrb_thread_context*) malloc(sizeof(mrb_thread_context));
     context->mrb_caller = mrb;
-    context->mrb = mrb_open();
+    context->mrb = mrb_open_allocf(mrb->allocf, mrb->allocf_ud);
         
     migrate_all_symbols(mrb, context->mrb);
     context->proc = mrb_proc_new(mrb, mrb_proc_ptr(proc)->body.irep);
@@ -1333,10 +1333,11 @@ mrb_value jam_get_mrb(mrb_state* mrb, mrb_value self) {
   return ro;  
 }
 
+
 void mrb_mruby_thread_init(mrb_state* mrb) {
   RClass *clsKern = mrb_class_get(mrb, "Object");
   mrb_define_method(mrb, clsKern, "proxy", jam_proxy, MRB_ARGS_REQ(1));
-  mrb_define_method(mrb, clsKern, "to_java", jam_to_java, MRB_ARGS_REQ(1));
+  mrb_define_method(mrb, clsKern, "_to_java_", jam_to_java, MRB_ARGS_REQ(1));
   mrb_define_method(mrb, clsKern, "__mrb_context__", jam_get_mrb, MRB_ARGS_NONE());  
   struct RClass *_class_thread, *_class_mutex, *_class_queue;
 

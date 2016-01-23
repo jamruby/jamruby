@@ -32,6 +32,12 @@ module JamRuby
       end
     ],
     
+    "android/widget/EditText" => [
+      Proc.new do
+        NativeWrapper.override JAVA::Android::Widget::EditText, "getText", "()Landroid/text/Editable;"  
+      end
+    ],    
+    
     "org/jamruby/ext/ObjectList" => [
       Proc.new do
         JAVA::Org::Jamruby::Ext::ObjectList.implement JamRuby::List  

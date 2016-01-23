@@ -18,7 +18,7 @@ extern "C" {
 #include <cerrno>
 #include <cstring>
 #include <map>
-
+#include <clocale>
 #include "jamruby_JClass.h"
 #include "jamruby_JObject.h"
 #include "jamruby_JMethod.h"
@@ -205,8 +205,7 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1arrayNew
   (JNIEnv *env, jclass clazz, jlong mrb)
 {
 	mrb_value const &value = mrb_ary_new(MRBSTATE(mrb));
-	safe_jni::safe_local_ref<jobject> val(getEnv(), create_value(getEnv(), value));
-	return val.get();
+	return create_value(getEnv(), value);
 }
 
 /*
@@ -694,8 +693,7 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1strNew
 {
 	safe_jni::safe_string jstr(getEnv(), str);
 	mrb_value const &value = mrb_str_new(MRBSTATE(mrb), jstr.string(), jstr.length());
-	safe_jni::safe_local_ref<jobject> val(getEnv(), create_value(getEnv(), value));
-	return val.get();
+	return create_value(getEnv(), value);
 }
 
 /*
@@ -728,8 +726,8 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1topSelf
 		return NULL;
 	}
 	mrb_value const &value = mrb_top_self(MRBSTATE(mrb));
-	safe_jni::safe_local_ref<jobject> val(getEnv(), create_value(getEnv(), value)); 
-	return val.get();
+	return create_value(getEnv(), value); 
+	//return val.get();
 }
 
 /*
@@ -1204,7 +1202,7 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1defineGlobalConst
 JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1init_1JNI_1module
   (JNIEnv *env, jclass, jlong mrb, jlong threadId)
 {
-  
+  std::setlocale(LC_ALL, "en_US.UTF-8");
   env->GetJavaVM(&gJvm);;  // cache the JavaVM pointer
   
 

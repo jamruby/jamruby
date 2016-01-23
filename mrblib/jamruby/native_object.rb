@@ -11,7 +11,7 @@ module JamRuby
     end  
     
     def self.classForName(path)
-      JAVA::Org::Jamruby::Ext::Util.classForName(path)
+      JAVA::Java::Lang::Class.forName(path)
     end
   end
   
@@ -35,7 +35,13 @@ module JamRuby
         r = ::JAVA::Org::Jamruby::Ext::FieldHelper.getField(cls, c.to_s)
         const_set c, r
         return r
-      end       
+      end 
+      
+      if ::JAVA::Org::Jamruby::Ext::FieldHelper.hasField(cls, c.to_s.uncapitalize)
+        r = ::JAVA::Org::Jamruby::Ext::FieldHelper.getField(cls, c.to_s.uncapitalize)
+        const_set c, r
+        return r
+      end               
       
       super
     end   
@@ -55,6 +61,10 @@ module JamRuby
     end
     
     def to_str
+      __to_str__
+    end
+    
+    def to_s
       __to_str__
     end
     
@@ -112,13 +122,26 @@ module JamRuby
       @_m_map ||= {:static=>{}, :ins=>{}}
     end
     
+    def self.sigs
+      @sigs ||= {}
+      @sigs[:static]  ||= {}
+      @sigs[:instance] ||= {}
+      @sigs
+    end
+    
     def self.add_method name, static = false
       this = self
-      
+
       (static ? singleton_class : self).define_method name do |*o, &b|
-        
-        sig, as =  this.get_signature(name, static)
-        cls = java.import as if as 
+        unless this.sigs[static ? :static : :instance][name]
+          a = []
+          a.push *this.get_signature(name, static)
+          a << java.import(a[1]) if a[1]  
+          this.sigs[static ? :static : :instance][name] = a
+        end
+
+        sig, as, cls = this.sigs[static ? :static : :instance][name]
+
       
         o = this.adjust_args sig, *o, &b    
         

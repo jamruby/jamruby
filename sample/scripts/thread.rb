@@ -9,9 +9,10 @@ begin
       @thread = Thread.new do
         begin  
           i = -1       
-
+          java.import "java/lang/Thread"
           loop do 
-            handler.emit :foo, i+=1
+            p [:THREAD, Java::Lang::Thread.currentThread().getId()]
+            handler.emit :post, i+=1
             sleep 0.04
           end
         rescue=>e
@@ -30,7 +31,10 @@ begin
   
   b=Android::Widget::Button.new(activity)
   b.setText "Click Me!"  
+  a = Java::Lang::Thread.currentThread().getId()
   b.setOnClickListener() do |v|
+    p [:THREAD, Java::Lang::Thread.currentThread().getId()]
+    p [:THREAD, a]
     tst = toast "ouch!"
   end
 

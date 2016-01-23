@@ -1,7 +1,9 @@
 begin
   java.import "android/graphics/Paint"  
   java.import "android/graphics/Color"  
-  java.import "android/graphics/RectF"     
+  java.import "android/graphics/RectF"  
+  java.import "android/graphics/Canvas" 
+  java.import "android/view/MotionEvent"        
 
   class CircleView < JamRuby::View
     def initialize context, fill=:blue, stroke=:red, pct=0.25
@@ -107,8 +109,8 @@ begin
     
     cv.postDelayed(q, 100) 
   end
-  
+
   activity.setContentView cv
 rescue => e
-  p "MAIN: Error - #{e} :: #{$r}"
+  puts "MAIN: Error - #{e.inspect} :: #{$r}"
 end

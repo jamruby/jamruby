@@ -1,7 +1,5 @@
-java.import "android/graphics/Canvas"  
-java.import "android/view/MotionEvent"       
+begin 
 java.import "org/jamruby/ext/JamView"
-
 module JamRuby
   class View < Org::Jamruby::Ext::JamView
     def initialize context
@@ -25,4 +23,9 @@ module JamRuby
       # void
     end
   end
+end
+p :VIEW
+rescue => e
+JAVA::Android::Util::Log.e("activity.mrb", e.inspect)
+  $r = e
 end
