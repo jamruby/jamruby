@@ -11,8 +11,7 @@ begin
           i = -1       
           java.import "java/lang/Thread"
           loop do 
-            p [:THREAD, Java::Lang::Thread.currentThread().getId()]
-            handler.emit :post, i+=1
+            main :update, i+=1
             sleep 0.04
           end
         rescue=>e
@@ -22,19 +21,20 @@ begin
     end
   end  
   
+  def update i
+    @tv.setText "Thread: looped #{i} times."
+  end
+  
   param = Android::Widget::LinearLayout::LayoutParams.new(:match_parent, :match_parent, 3.0);
   
   ll = Android::Widget::LinearLayout.new(activity)
   ll.setOrientation :vertical
   
-  tv = Android::Widget::TextView.new(activity)
+  @tv = tv = Android::Widget::TextView.new(activity)
   
   b=Android::Widget::Button.new(activity)
   b.setText "Click Me!"  
-  a = Java::Lang::Thread.currentThread().getId()
   b.setOnClickListener() do |v|
-    p [:THREAD, Java::Lang::Thread.currentThread().getId()]
-    p [:THREAD, a]
     tst = toast "ouch!"
   end
 
@@ -42,10 +42,6 @@ begin
   ll.addView(b)
   
   activity.setContentView ll
-  
-  handler.on :foo  do |*o|
-    tv.setText "Thread Looped: #{o[0]} times!"
-  end
   
   Updater.new()
 rescue => e

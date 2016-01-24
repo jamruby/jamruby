@@ -1,11 +1,14 @@
 begin
   java.import "android/graphics/Paint"  
   java.import "android/graphics/Color"  
-  java.import "android/graphics/RectF"     
+  java.import "android/graphics/RectF"  
+  java.import "android/graphics/Canvas" 
+  java.import "android/view/MotionEvent"        
 
   class CircleView < JamRuby::View
     def initialize context, fill=:blue, stroke=:red, pct=0.25
       super context
+
       @fill = Android::Graphics::Color.const_get(:"#{fill.to_s.upcase}")
       @stroke = Android::Graphics::Color.const_get(:"#{stroke.to_s.upcase}")
       
@@ -22,9 +25,9 @@ begin
     def draw_fill canvas
       pt = Android::Graphics::Paint.new();
       pt.setAntiAlias(true);
-      pt.setColor(@fill);
-      e = Org::Jamruby::Ext::Util.enums(Org::Jamruby::Ext::Util.classForName("android.graphics.Paint$Style"))
-      pt.setStyle(e.get(2)); 
+      pt.setColor(@fill);   
+      pt.setStyle(:fill_and_stroke); 
+
       
       # draw centered circle 
       canvas.drawOval(Android::Graphics::RectF.new(*get_virtual_rect), pt)     
@@ -34,8 +37,7 @@ begin
       pt = Android::Graphics::Paint.new();
       pt.setAntiAlias(true);
       pt.setColor(@stroke);
-      e = Org::Jamruby::Ext::Util.enums(Org::Jamruby::Ext::Util.classForName("android.graphics.Paint$Style"))
-      pt.setStyle(e.get(1)); 
+      pt.setStyle(:stroke); 
       pt.setStrokeWidth(4.5);
       
       # draw centered circle 
@@ -75,8 +77,11 @@ begin
     
     def toggle_colors
       s,f = @stroke, @fill
+      
       @fill = s
       @stroke = f
+      
+      postInvalidate 
     end
     
     def on_touch_event(event)
@@ -84,7 +89,6 @@ begin
       if event.getAction == Android::View::MotionEvent::ACTION_DOWN
         if contains(event.getX, event.getY)    
           toggle_colors
-          postInvalidate
           performClick
         end
       end
@@ -93,13 +97,20 @@ begin
     end
   end
   
+  q=JamRuby::Runnable.new
 
-  cv = CircleView.new(activity, :blue, :white, 0.33)
+  cv = CircleView.new(activity, :red, :gray, 0.33)
   cv.setOnClickListener do
-    toast "Hello!"
+    t = toast "Hello!"
+    
+    q.set do
+      t.cancel
+    end
+    
+    cv.postDelayed(q, 100) 
   end
-  
+
   activity.setContentView cv
 rescue => e
-  p "MAIN: Error - #{e} :: #{$r}"
+  puts "MAIN: Error - #{e.inspect} :: #{$r}"
 end

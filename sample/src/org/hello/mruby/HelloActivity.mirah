@@ -8,6 +8,6 @@ class HelloActivity < JamActivity
     
     super state
     
-    loadScript(jamruby.state, "#{root}/main.rb")
+    loadScriptFull(jamruby.state.nativeObject, "#{root}/main.rb")
   end
 end
