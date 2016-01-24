@@ -14,6 +14,10 @@ module JamRuby
       end
     end 
     
+    def block
+      self.class.new(@target, @java_method + "Block")
+    end
+    
     class MainMessage < Message
       def activity
         Message.new(nil, "rubySend")

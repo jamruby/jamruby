@@ -147,42 +147,68 @@ class JamActivity < Activity
   end
   
   synchronized def rubySendMain(m:String, ol:ObjectList):void
-    while @l; end
-    @l=true
-    a=self
     ts = @top_self
+    
     runOnUiThread do
       ts.send m, ol
-      a.l=false
     end
-    while @l; end
   end
   
-  synchronized def rubySend(m:String, ol:ObjectList):void
-    while @l; end
-    @l=true
-    a=self
-    s = @_self_
+  synchronized def rubySendMainBlock(m:String, ol:ObjectList):void
+    l=true
+    ts = @top_self
+    
     runOnUiThread do
-      s.send m, ol
-      a.l=false
+      ts.send m, ol
+      l=false
     end
-    while @l; end
+    
+    while l; end
   end  
   
+  synchronized def rubySend(m:String, ol:ObjectList):void
+    s = @_self_
+    
+    runOnUiThread do
+      s.send m, ol
+    end
+  end  
+  
+  synchronized def rubySendBlock(m:String, ol:ObjectList):void
+    l=true
+    s = @_self_
+    
+    runOnUiThread do
+      s.send m, ol
+      l=false
+    end
+    
+    while l; end
+  end   
+  
   synchronized def rubySendWithSelfFromReturn(fun:String, m:String, ol:ObjectList):void
-    while @l; end
-    @l=true
     jamruby = @jamruby
-    a=self
     ts = @top_self
+    
     runOnUiThread do
       value = ts.send fun, ObjectList.create
       RubyObject.new(jamruby.state.nativeObject, value).send m, ol
-      a.l=false
     end
-    while @l; end
-  end  
+  end 
+  
+  synchronized def rubySendWithSelfFromReturnBlock(fun:String, m:String, ol:ObjectList):void
+    l=true
+    jamruby = @jamruby
+    ts = @top_self
+    
+    runOnUiThread do
+      value = ts.send fun, ObjectList.create
+      RubyObject.new(jamruby.state.nativeObject, value).send m, ol
+      l=false
+    end
+    
+    while l; end
+  end   
   
   def install
     File.new("#{getFilesDir}/i").mkdir

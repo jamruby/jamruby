@@ -36,6 +36,10 @@ begin
         # ...
       end
       
+      def on_restart
+        # ...
+      end
+      
       def on_destroy
         # ...
       end

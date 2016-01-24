@@ -21,8 +21,8 @@ class HelloActivity < JamActivity
   #   # do stuff
   # end
   
-  # # Below is a template where <Action> is one of: Pause|Resume|Create|Destroy|Start|Stop
-  # #                     where <action> is one of: pause|resume|create|destroy|start|stop 
+  # # Below is a template where <Action> is one of: Pause|Resume|Create|Destroy|Start|Stop|Restart
+  # #                     where <action> is one of: pause|resume|create|destroy|start|stop|Restart
   # #
   # def on<Action>():void
   #   # maybe do stuff

@@ -153,13 +153,25 @@ class Util
     JamActivity.getInstance.rubySendMain m, ol
   end
   
+  def self.rubySendMainBlock(m:String, ol:ObjectList):void
+    JamActivity.getInstance.rubySendMainBlock m, ol
+  end  
+  
   def self.rubySend(m:String, ol:ObjectList):void
     JamActivity.getInstance.rubySend m, ol
   end
   
+  def self.rubySendBlock(m:String, ol:ObjectList):void
+    JamActivity.getInstance.rubySendBlock m, ol
+  end  
+  
   def self.rubySendWithSelfFromReturn(fun:String, m:String, ol:ObjectList):void
     JamActivity.getInstance.rubySendWithSelfFromReturn fun, m, ol
   end    
+  
+  def self.rubySendWithSelfFromReturnBlock(fun:String, m:String, ol:ObjectList):void
+    JamActivity.getInstance.rubySendWithSelfFromReturnBlock fun, m, ol
+  end
   
   def self.objectArrayToValueArray(mrb:State, oa:Object[]):Value[]
     va = Value[oa.length]
