@@ -43,7 +43,7 @@ public class Jamruby {
 		}
 	}
     
-    public Value loadString(String code) {
+  public Value loadString(String code) {
 		return MRuby.loadString(state, code);
 	}
 }

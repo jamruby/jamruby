@@ -35,5 +35,8 @@ class RubyObject
     end
     
     MRuby.funcallArgv mrb, ins, name, ol.size, va
+  rescue => e
+    Util.p e.toString
+    return MRuby.funcall(mrb, ins, "raise", 1, MRuby.strNew(mrb, e.toString))
   end
 end

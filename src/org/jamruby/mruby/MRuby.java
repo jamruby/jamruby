@@ -210,6 +210,10 @@ public class MRuby {
 		return n_strNew(state.nativeObject(), str);
 	}
 	
+	public static Value strNew(long state, String str) {
+		return n_strNew(state, str);
+	}  
+  
 	public static State open() {
 		State s = new State(n_open());
 		if (s.available()) {

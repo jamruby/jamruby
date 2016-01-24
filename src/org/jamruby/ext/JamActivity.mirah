@@ -33,29 +33,55 @@ class JamActivity < Activity
   
     loadCompiled(jamruby.state, "#{root}/mrblib/activity.mrb") 
     
-    @top_self = RubyObject.new(jamruby.state.nativeObject, MRuby.topSelf(jamruby.state))
+    @top_self   = RubyObject.new(jamruby.state.nativeObject, MRuby.topSelf(jamruby.state))
+    @_self_     = RubyObject(nil)
+    
+    init()
+    
+    ol = ObjectList.create
+    ol.addObj state
+    
+    _self_.send "on_create", ol
   end
   
   def root:String
-    Environment.getExternalStorageDirectory.toString+"/jamruby/"+@cls.getPackage.getName
+    Environment.getExternalStorageDirectory.toString+"/jamruby/"+self.getClass.getPackage.getName
   end
   
   def jamruby
     @jamruby
   end
   
-  def setActivityClass c:Class
-    @cls = c
-  end 
+  def onBeforeInit():void
+  
+  end
+  
+  def init():void
+    onBeforeInit()
+  
+    result = loadScript(jamruby.state, "#{root}/main.rb")
+    Util.p result.toString
+    result  = jamruby.loadString("p '#{root}'; begin; __JAM_ACTIVITY__ = Main.new; $activity = __JAM_ACTIVITY__; p $activity; $activity; rescue => e; p e; nil; end")
+    Util.p result.toString
+    @_self_ = RubyObject.new(jamruby.state.nativeObject, result)
+    Util.p _self_.send("to_s", ObjectList.create).toString
+    Util.p _self_.toString
+  end
+  
+  def getActivityClass
+    self.getClass
+  end
   
   def self.getInstance():JamActivity
     @@instance
   end
   
-  def self.toast a:Activity, m:String
-    t = Toast.makeText(a, m, 500)
-    t.show
-    return t
+  def toast m:String
+    Util.toast m
+  end  
+  
+  def toast2 m:String
+    Util.toast2 m
   end
   
   def loadCompiledFull mrb:long, pth:String
@@ -65,13 +91,13 @@ class JamActivity < Activity
     return r
   end
   
-  def loadScriptFull(mrb:long, pth:String)
+  def loadScriptFull(mrb:long, pth:String):Value
     script = Util.readFile(pth)
-    Log.i("jamapp",  r = MRuby.loadString(mrb, script).toString)
+    Log.i("jamapp",  (r = MRuby.loadString(mrb, script)).toString)
     return r
   end
   
-  def loadScript mrb:State, pth:String
+  def loadScript(mrb:State, pth:String):Value
     loadScriptFull mrb.nativeObject, pth
   end
   
@@ -85,41 +111,44 @@ class JamActivity < Activity
   
   def onStart
     super
-    topSelfCall("on_start")
+    selfCall("on_start")
   end
   
   def onPause
     super
-    topSelfCall("on_pause")
+    selfCall("on_pause")
   end  
   
   def onDestroy
     super
-    topSelfCall("on_destroy")
+    selfCall("on_destroy")
   end  
   
   def onResume
     super
-    topSelfCall("on_resume")
+    selfCall("on_resume")
   end  
   
   def onRestart
     super
-    topSelfCall("on_restart")
+    selfCall("on_restart")
   end 
   
   def topSelfCall method:String       
-    MRuby.funcall(jamruby.state, MRuby.topSelf(jamruby.state), method, 0)
+    @top_self.send method, ObjectList.create
   end
+  
+  def selfCall method:String       
+    @_self_.send method, ObjectList.create
+  end  
   
   def l= b:boolean
     @l = b
   end
   
-  synchronized def sendMain(m:String, ol:ObjectList):void
+  synchronized def rubySendMain(m:String, ol:ObjectList):void
     while @l; end
     @l=true
-    jamruby = @jamruby
     a=self
     ts = @top_self
     runOnUiThread do
@@ -128,6 +157,32 @@ class JamActivity < Activity
     end
     while @l; end
   end
+  
+  synchronized def rubySend(m:String, ol:ObjectList):void
+    while @l; end
+    @l=true
+    a=self
+    s = @_self_
+    runOnUiThread do
+      s.send m, ol
+      a.l=false
+    end
+    while @l; end
+  end  
+  
+  synchronized def rubySendWithSelfFromReturn(fun:String, m:String, ol:ObjectList):void
+    while @l; end
+    @l=true
+    jamruby = @jamruby
+    a=self
+    ts = @top_self
+    runOnUiThread do
+      value = ts.send fun, ObjectList.create
+      RubyObject.new(jamruby.state.nativeObject, value).send m, ol
+      a.l=false
+    end
+    while @l; end
+  end  
   
   def install
     File.new("#{getFilesDir}/i").mkdir

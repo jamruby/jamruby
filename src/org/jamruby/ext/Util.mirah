@@ -13,6 +13,7 @@ import org.jamruby.mruby.State
 import org.jamruby.mruby.MRuby
 
 import android.util.Log
+import android.widget.Toast
 
 import org.jamruby.ext.JamActivity
 
@@ -66,10 +67,25 @@ class Util
       Log.i "jamapp", "Make String"
       MRuby.strNew(mrb, String(obj))
     else
-      Log.i "jamapp", "Make NIL"
+      Log.i "jamapp", "Make Object"
       MRuby.jobjectMake(mrb, obj)
     end
   end
+  
+  def self.viewById(id:int)
+    JamActivity.getInstance.findViewById(id)
+  end
+  
+  def self.toast(msg:String):void
+    t = Toast.makeText JamActivity.getInstance, msg, 1000
+    t.show
+  end
+  
+  def self.toast2(msg:String):Toast
+    t = Toast.makeText JamActivity.getInstance, msg, 1000
+    t.show
+    t
+  end  
   
   def self.enums e:Class
     ol = ObjectList.new
@@ -133,9 +149,17 @@ class Util
     return va
   end
   
-  def self.sendMain(m:String, ol:ObjectList):void
-    JamActivity.getInstance.sendMain m, ol
+  def self.rubySendMain(m:String, ol:ObjectList):void
+    JamActivity.getInstance.rubySendMain m, ol
   end
+  
+  def self.rubySend(m:String, ol:ObjectList):void
+    JamActivity.getInstance.rubySend m, ol
+  end
+  
+  def self.rubySendWithSelfFromReturn(fun:String, m:String, ol:ObjectList):void
+    JamActivity.getInstance.rubySendWithSelfFromReturn fun, m, ol
+  end    
   
   def self.objectArrayToValueArray(mrb:State, oa:Object[]):Value[]
     va = Value[oa.length]

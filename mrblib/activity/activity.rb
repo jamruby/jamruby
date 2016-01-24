@@ -5,6 +5,46 @@ begin
   java.import "android/R"
   java.import "org/jamruby/ext/JamActivity"
  
+ 
+  module JamRuby
+    module NativeActivity
+    end
+  
+    class Activity < Org::Jamruby::Ext::JamActivity
+      def initialize
+        @native = Org::Jamruby::Ext::JamActivity.getInstance.native
+        extend JamRuby::NativeActivity
+      end
+      
+      def self.new
+        _new()
+      end
+      
+      def on_pause
+        # ...
+      end
+      
+      def on_resume
+        # ...
+      end
+      
+      def on_stop
+        # ...
+      end
+      
+      def on_start
+        # ...
+      end
+      
+      def on_destroy
+        # ...
+      end
+      
+      def on_create state
+        # ...
+      end
+    end
+  end
 
   class Object
     alias :__jam_require__ :require
@@ -21,14 +61,14 @@ begin
   end
  
   module Kernel
-    def toast str, len = 500
-      tst = Android::Widget::Toast.makeText activity, str, len
+    def toast str
+      tst = Android::Widget::Toast.makeText activity, str, 1000
       tst.show
       tst
     end
 
     def activity
-      Org::Jamruby::Ext::JamActivity.getInstance
+      $activity
     end
   end 
 

@@ -97,20 +97,24 @@ begin
     end
   end
   
-  q=JamRuby::Runnable.new
+  class Main < JamRuby::Activity
+    def on_create state
+      q=JamRuby::Runnable.new
 
-  cv = CircleView.new(activity, :red, :gray, 0.33)
-  cv.setOnClickListener do
-    t = toast "Hello!"
-    
-    q.set do
-      t.cancel
+      cv = CircleView.new(self, :red, :gray, 0.33)
+      cv.setOnClickListener do
+        t = toast2 "Hello!"
+        
+        q.set do
+          t.cancel
+        end
+        
+        cv.postDelayed(q, 100) 
+      end
+
+      setContentView cv
     end
-    
-    cv.postDelayed(q, 100) 
   end
-
-  activity.setContentView cv
 rescue => e
-  puts "MAIN: Error - #{e.inspect} :: #{$r}"
+  puts "MAIN: Error - #{e.inspect}"
 end
