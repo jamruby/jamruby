@@ -35,7 +35,7 @@ Requirements
 ----
 * android-ndk (ndk-build must be on path)
 * jruby  (must be on path)
-* mirah  (jruby -S gem i mirah)
+* mirah  (jruby -S gem i mirah -v 0.1.5.dev)
 
 Build
 ----
@@ -54,7 +54,7 @@ git clone https://github.com/ppibburr/jamruby
 # make
 # cd ..
 
-# jruby -S gem i mirah
+# jruby -S gem i mirah -v 0.1.5.dev
 
 
 cd jamruby
