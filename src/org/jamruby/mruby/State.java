@@ -1,6 +1,7 @@
 package org.jamruby.mruby;
 
 import org.jamruby.core.Jamruby;
+import android.util.Log;
 
 public class State {
 	private long nativeObj;
@@ -15,6 +16,7 @@ public class State {
 		try {
 			super.finalize();
 		} finally {
+      Log.i("MRB_STATE:", "mrb_close");
 			close();
 		}
 	}
