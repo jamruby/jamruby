@@ -29,7 +29,7 @@
              
       <exec executable="jruby" dir="src">
          <arg line=" -S mirahc" />
-         <arg line="--cp ${sdk.dir}/platforms/${target}/android.jar:../../bin/classes/" />
+         <arg line="--cp ${sdk.dir}/platforms/${target}/android.jar:../../../bin/classes/" />
          <arg value="-d" />
          <arg value="../bin/classes/" />
          <arg value="." />

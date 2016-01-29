@@ -5,26 +5,19 @@ end
 
 desc "Compiles classes and builds DEBUG apk file"
 task :debug do
-  sh "cp -rf ../assets/* assets/" 
+  sh "cp -rf ../../assets/* assets/" 
   sh "ant debug"
 end
 
 desc "Installs to a device/emulator"
 task :install do
-  sh "adb uninstall org.hello.mruby"
+  sh "adb uninstall org.jamruby.runner"
   sh "adb install -r bin/*debug.apk"
 end
 
 desc "Runs the app on the device/emulator"
 task :run do
-  sh "adb shell am force-stop org.hello.mruby && adb shell monkey -p org.hello.mruby 1"
-end
-
-desc "copy  ./scripts/<name ||= 'custom_view'>.rb to assets/main.rb"
-task :main, [:name] do |t,args|
-  f = args.with_defaults({:name=>"custom_view"})[:name]
-  sh "mkdir -p assets/"
-  sh "cp scripts/#{f}.rb assets/main.rb"
+  sh "adb shell am force-stop org.jamruby.runner && adb shell monkey -p org.jamruby.runner 1"
 end
 
 desc "Clean, create debug apk, install apk, push ruby file, run's the app"

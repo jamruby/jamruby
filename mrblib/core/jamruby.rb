@@ -1,8 +1,15 @@
-require "java/util/regex/Pattern"
-require "java/util/regex/Matcher"
-require "android/util/Log"
-require "org/jamruby/ext/Util"
-require "org/jamruby/ext/ObjectList"
+code = [
+  "java/util/regex/Pattern",
+  "java/util/regex/Matcher",
+  "android/util/Log",
+  "org/jamruby/ext/Util",
+  "org/jamruby/ext/ObjectList",
+  "org/jamruby/ext/FieldHelper"
+].map do |pth|
+  "require '#{pth}'"
+end.join(";")
+
+__eval__ code
 
 module JamRuby
   VERSION = "0.0.3"
@@ -13,6 +20,12 @@ module JamRuby
          NativeWrapper.static_override JAVA::Android::Widget::Toast, "makeText", "(Landroid/content/Context;Ljava/lang/CharSequence;I)Landroid/widget/Toast;"
        end
     ],
+    
+    "android/widget/ListView" => [
+       Proc.new do
+         NativeWrapper.override JAVA::Android::Widget::ListView, "setAdapter", "(Landroid/widget/ListAdapter;)V"
+       end
+    ],    
     
     "android/widget/Button" => [
       Proc.new do

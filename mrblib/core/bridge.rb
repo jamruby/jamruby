@@ -1,4 +1,5 @@
-require "java/lang/Class"
+__eval__ "require 'java/lang/Class'"
+
 module JamRuby
   module Bridge
     # Binds Java Class to Ruby
@@ -8,6 +9,10 @@ module JamRuby
     #
     # @return [Class] 
     def self.import path, bool=false
+      __eval__ "java.__import__ '#{path}', #{bool}"
+    end
+    
+    def self.__import__ path, bool=false
       if path.index("$") and !bool
         # defer to outer class import
         
@@ -23,7 +28,9 @@ module JamRuby
       a.each do |b|
         c=b[0..0].capitalize+b[1..-1]
         if !t.const_defined? c.to_sym
-          require path
+          
+          __eval__ "require '#{path}'"
+          
           if q=JamRuby::IMPORT_OVERLOADS[path]
             q.each do |z|
               z.call
@@ -62,7 +69,7 @@ module JamRuby
         end
         
         get_inner_classes(path).each do |ic|
-          java.import(z=ic.to_s, z.index(path))
+          java.__import__(z=ic.to_s, z.index(path))
         end        
         
         return cls 
@@ -78,6 +85,6 @@ module JamRuby
       o = JAVA::Org::Jamruby::Ext::Util.innerClassesOf(JamRuby::NativeClassHelper.classForName(pth.split("/").join(".")))
       o.extend NativeList
       o
-    end
+    end   
   end 
 end

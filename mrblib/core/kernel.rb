@@ -1,4 +1,5 @@
-require "java/lang/Thread"
+__eval__ "require 'java/lang/Thread'"
+
 module JamRuby
   class Message
     def initialize target = nil, java_method = "rubySendMain"
@@ -7,10 +8,12 @@ module JamRuby
     end
     
     def method_missing m, *o
+      h = JAM_MAIN_HANDLE.respond_to?(:native) ? JAM_MAIN_HANDLE.native : JAM_MAIN_HANDLE
+    
       if @target
-        JAVA::Org::Jamruby::Ext::Util.send @java_method, @target.to_s, m.to_s, o.to_object_list.native
+        JAVA::Org::Jamruby::Ext::Util.send @java_method, h, @target.to_s, m.to_s, o.to_object_list.native
       else
-        JAVA::Org::Jamruby::Ext::Util.send @java_method, m.to_s, o.to_object_list.native
+        JAVA::Org::Jamruby::Ext::Util.send @java_method, h, m.to_s, o.to_object_list.native
       end
     end 
     
@@ -20,7 +23,7 @@ module JamRuby
     
     class MainMessage < Message
       def activity
-        Message.new(nil, "rubySend")
+        Message.new(:activity, "rubySendMainWithSelfFromResult")
       end
     end
   end
@@ -28,7 +31,10 @@ end
 
 module Kernel          
   def print *o
-    o.each do |q| JAVA::Android::Util::Log.i("jamruby", q.to_s) end
+  
+    o.each do |q| 
+      JAVA::Android::Util::Log.i("jamruby", q.to_s)
+    end
   end  
   
   def puts *o
@@ -49,7 +55,27 @@ module Kernel
   end   
   
   def main(_self_ = nil)
-    JamRuby::Message::MainMessage.new(_self_, _self_ ? "rubySendWithSelfFromReturn" : "rubySendMain")
+    JamRuby::Message::MainMessage.new(_self_, _self_ ? "rubySendMainWithSelfFromResult" : "rubySendMain")
+  end
+end
+
+class Object
+  alias :__jam_require__ :require
+  
+  # Requires a path
+  # If path ends in '.rb' or '.mrb' that file will be loaded
+  # Else it will import a Java namespace under ::JAVA
+  #
+  # @param [String] path
+  def require path
+    q = path.split(".").last
+    if q == "rb"
+      JAM_MAIN_HANDLE.loadScriptFull __mrb_context__, path
+    elsif q == "mrb"
+      JAM_MAIN_HANDLE.loadCompiledFull __mrb_context__, path
+    else
+      __jam_require__ path
+    end
   end
 end
   

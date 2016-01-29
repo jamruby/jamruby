@@ -27,6 +27,8 @@ extern "C" {
 #include "jamruby_mruby_ext.h"
 #include "jamruby_mruby_utils.h"
 
+extern mrb_value mrb_jam_thread_init(mrb_state* parent, mrb_value argv, mrb_value proc, mrb_state* child);
+extern mrb_value jam_transfer_proc(mrb_state* parent, mrb_value proc, mrb_state* child);
 #define MRBSTATE(mrb) to_ptr<mrb_state>(mrb)
 int jam_once=0;
 static inline mrb_sym to_sym(jlong &sym) {
@@ -453,6 +455,47 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1checkToInteger
 	mrb_value const &ret = mrb_check_to_integer(MRBSTATE(mrb), val, method_name.string());
 	safe_jni::safe_local_ref<jobject> result(getEnv(), create_value(getEnv(), ret));
 	return result.get();
+}
+
+/*
+ * Class:     org_jamruby_mruby_MRuby
+ * Method:    n_transferProc
+ * Signature: (JLorg/jamruby/mruby/Value;J)Lorg/jamruby/mruby/Value;
+ */
+JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1transferProc
+  (JNIEnv *env, jclass, jlong parent, jobject proc, jlong child)
+{
+  mrb_value proc_val;
+	if (!create_mrb_value(getEnv(), proc, proc_val)) {
+		return NULL;
+	}  
+  
+	mrb_value const &ret =  jam_transfer_proc(MRBSTATE(parent), proc_val , MRBSTATE(child));
+
+  return create_value(getEnv(), ret);  
+}
+
+/*
+ * Class:     org_jamruby_mruby_MRuby
+ * Method:    n_threadInit
+ * Signature: (JLorg/jamruby/mruby/Value;Lorg/jamruby/mruby/Value;J)Lorg/jamruby/mruby/Value;
+ */
+JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1threadInit
+  (JNIEnv *env, jclass, jlong parent, jobject argv, jobject proc, jlong child)
+{
+  mrb_value proc_val;
+	if (!create_mrb_value(getEnv(), proc, proc_val)) {
+		return NULL;
+	}
+  
+  mrb_value argv_val;
+	if (!create_mrb_value(getEnv(), argv, argv_val)) {
+		return NULL;
+	}  
+  
+	mrb_value const &ret =  mrb_jam_thread_init(MRBSTATE(parent), argv_val, proc_val , MRBSTATE(child));
+
+  return create_value(getEnv(), ret);
 }
 
 /*
@@ -1216,46 +1259,7 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1init_1JNI_1module
 								"(Ljava/lang/String;)Ljava/lang/Class;");		
   jam_thread = 0;  
   
-	using namespace org::jamruby;
-	jamruby_context *context = jamruby_context::register_context(MRBSTATE(mrb), getEnv());
-	if (NULL == context) {
-		LOGE("cannot register jamruby context.");
-		return;
-	}
-
-	RClass *mod_jni = mrb_define_module(MRBSTATE(mrb), "JAVA");
-	mrb_define_const(MRBSTATE(mrb), mod_jni, "JAVA_THREAD_ID", mrb_fixnum_value(threadId));
-	mrb_define_module_function(MRBSTATE(mrb), mod_jni, "find_class", java_find_class, MRB_ARGS_REQ(1));
-
-	if (0 != jobject_init_class(MRBSTATE(mrb))) {
-		// TODO error handling
-	}
-
-	if (0 != jcls_init_class(MRBSTATE(mrb))) {
-		// TODO error handling
-	}
-
-	if (0 != jmethod_init_class(MRBSTATE(mrb))) {
-		// TODO error handling
-	}
-
-	if (0 != jthrowable_init_class(MRBSTATE(mrb))) {
-		// TODO error handling
-	}
-
-	RClass *clsKern = mrb_class_get(MRBSTATE(mrb), "Object");
-	if (NULL != clsKern)
-	{
-		RProc * const proc = replace_mrb_func(MRBSTATE(mrb), clsKern, "require", jamruby_kernel_require);
-		if (NULL != proc) {
-			mrb_gc_mark(MRBSTATE(mrb), reinterpret_cast<RBasic*>(proc));
-		} else {
-			mrb_define_module_function(MRBSTATE(mrb), clsKern, "require", jamruby_kernel_require, MRB_ARGS_REQ(1));
-		}
-	}
-	
-	
-	mrb_mruby_thread_init(MRBSTATE(mrb));
+  jam_init_base(MRBSTATE(mrb), threadId);
 }
 
 /*

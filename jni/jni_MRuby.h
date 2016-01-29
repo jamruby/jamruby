@@ -10,6 +10,23 @@ extern "C" {
 
 /*
  * Class:     org_jamruby_mruby_MRuby
+ * Method:    n_transferProc
+ * Signature: (JLorg/jamruby/mruby/Value;J)Lorg/jamruby/mruby/Value;
+ */
+JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1transferProc
+  (JNIEnv *env, jclass, jlong parent, jobject proc, jlong child);
+
+
+/*
+ * Class:     org_jamruby_mruby_MRuby
+ * Method:    n_threadInit
+ * Signature: (JLorg/jamruby/mruby/Value;Lorg/jamruby/mruby/Value;J)Lorg/jamruby/mruby/Value;
+ */
+JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1threadInit
+  (JNIEnv *env, jclass, jlong parent, jobject argv, jobject proc, jlong child);
+
+/*
+ * Class:     org_jamruby_mruby_MRuby
  * Method:    n_redirect_stdout
  * Signature: ()I
  */

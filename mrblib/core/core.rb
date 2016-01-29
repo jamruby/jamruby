@@ -7,11 +7,10 @@ class Module
   end
 end
 
-
 class ::String
   def jmatch str
-    p = NativeWrapper.as(JAVA::Java::Util::Regex::Pattern.compile(str), JAVA::Java::Util::Regex::Pattern)
-    m = NativeWrapper.as(p.matcher(self), JAVA::Java::Util::Regex::Matcher);
+    p = JamRuby::NativeWrapper.as(JAVA::Java::Util::Regex::Pattern.compile(str), JAVA::Java::Util::Regex::Pattern)
+    m = JamRuby::NativeWrapper.as(p.matcher(self), JAVA::Java::Util::Regex::Matcher);
   end
   
   def rjust i, s
@@ -57,7 +56,7 @@ end
 
 class Object
   def to_java
-    _to_java_(self)
+    _to_java_(self, JAM_THREAD_STATE)
   end
   
   # mtuby-thread issue
@@ -132,6 +131,10 @@ class Array
     false
   end        
   
+  def native
+    to_array_list.native
+  end
+  
   def to_object_array
     to_object_list.toArray
   end
@@ -163,7 +166,7 @@ class Array
     end
     
     ol = Org::Jamruby::Ext::ObjectList.create
-    
+
     each do |v|
       if v.is_a? Integer
         if opts[:use_integer] == true

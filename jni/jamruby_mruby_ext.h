@@ -12,6 +12,7 @@ extern "C" {
 
 extern mrb_value jamruby_kernel_require(mrb_state *mrb, mrb_value self);
 void mrb_mruby_thread_init(mrb_state* mrb);
+void jam_init_thread(mrb_state* parent, mrb_state* child);
 mrb_value java_find_class(mrb_state *mrb, mrb_value self);
 
 #ifdef __cplusplus

@@ -16,6 +16,16 @@ module JamRuby
   end
   
   class NativeObject
+    def self.java_class
+      NativeClassHelper.classForName self::WRAP::CLASS_PATH.split("/").join(".")
+    rescue => e
+      p e
+    end 
+    
+    def self.native
+      java_class
+    end   
+  
     # Look up Fields
     def self.const_missing c
       pth = self::WRAP::CLASS_PATH.split("/").join(".")
@@ -51,9 +61,9 @@ module JamRuby
     end
     
     def __to_str__
-      c=@native.jclass
+      c=native.jclass
       m = c.get_method "toString","()Ljava/lang/String;"
-      c.call @native, m
+      c.call native, m
     end
     
     def inspect
@@ -84,7 +94,7 @@ module JamRuby
     
     def is_a? what
       if what.is_a?(::String)
-        if JAVA::Org::Jamruby::Ext::Util.is_a(self.native, what)
+        if JAVA::Org::Jamruby::Ext::Util.isInstance(self.native, what)
           return true
         end
         
@@ -148,12 +158,12 @@ module JamRuby
         if static
           res = this::WRAP.send name, *o       
         else  
-          if @native.is_a?(this::WRAP)
-            res = @native.send name, *o
+          if native.is_a?(this::WRAP)
+            res = native.send name, *o
           else
-            c=@native.jclass
+            c=native.jclass
             m=c.get_method(name, sig[1])
-            res = c.call(@native, m, *o)
+            res = c.call(native, m, *o)
           end
         end
           
@@ -166,7 +176,8 @@ module JamRuby
     end
     
     def self.wrap o
-      _new(o.respond_to?(:native) ? o.native : o)
+       o = o.respond_to?(:native) ? o.native : o
+       _new(o)
     end
     
     class << self

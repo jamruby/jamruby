@@ -1,11 +1,37 @@
-java.import "org/jamruby/ext/FieldHelper"  
 java.import "org/jamruby/ext/ObjectList"    
 java.import "org/jamruby/ext/Util"  
-java.import "org/jamruby/ext/Invoke"
-java.import "org/jamruby/ext/UIRunner" 
-java.import "org/jamruby/ext/ProcProxy"
+java.import "org/jamruby/ext/JamThread"
 
-def on_start
-  p :apple
+
+def JAM_MAIN_HANDLE.loadScriptFull mrb, path
+  im = jclass.get_method "loadScriptFull", "(JLjava/lang/String;)Lorg/jamruby/mruby/Value;"
+  jclass.call self, im, mrb, path
 end
-on_start
+
+class Org::Jamruby::Ext::ObjectList
+  def self.wrap o
+    r = super o
+    r.extend JamRuby::NativeList
+    r
+  end
+end
+
+class Thread
+  def initialize *o, &b
+    @jam_thread = Org::Jamruby::Ext::JamThread.new(JAM_MAIN_HANDLE, o.to_object_list, b.to_java).native
+    @jam_thread.start
+  end
+  
+  def native
+    jam_thread.native
+  end
+  
+  def jam_thread
+    @jam_thread
+  end
+  
+  def join
+    jam_thread.join
+  end
+end
+
