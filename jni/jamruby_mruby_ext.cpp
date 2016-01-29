@@ -673,27 +673,19 @@ mrb_value jam_proxy(mrb_state* mrb, mrb_value self) {
 
 mrb_value jam_to_java(mrb_state* mrb, mrb_value self) {
 	mrb_value ins;
-	mrb_value state;
   
-	mrb_get_args(mrb, "oo", &ins, &state);
+	mrb_get_args(mrb, "o", &ins);
 
-  safe_jni::safe_local_ref<jclass> vclazz(getEnv(), findClass("org/jamruby/ext/RubyObject"));
+  safe_jni::safe_local_ref<jclass> vclazz(getEnv(), findClass("org/jamruby/mruby/Value"));
 	  
   if (!vclazz) {
     LOGE("to_java: NO FIND CLASS");
   } else {
     
-    jmethodID m_create = getEnv()->GetStaticMethodID(vclazz.get(), "create", "(Lorg/jamruby/mruby/State;Lorg/jamruby/mruby/Value;)Lorg/jamruby/ext/RubyObject;");
-   
     mrb_value const &value = ins;
-
-    safe_jni::safe_local_ref<jobject> val(getEnv(), create_value(getEnv(), value)); 
-   
-    jobject robject = getEnv()->CallStaticObjectMethod(vclazz.get(), m_create, jobject_get_jobject(mrb, state), getEnv()->NewGlobalRef(val.get()));	
-    
-    jni_type_t const type = org::jamruby::get_return_type("()Lorg/jamruby/ext/RubyObject;");
+    jni_type_t const type = org::jamruby::get_return_type("()Lorg/jamruby/mruby/Value;");
     jvalue ret;
-    ret.l = robject;
+    ret.l = create_value(getEnv(), value);
     
     mrb_value ro =  org::jamruby::convert_jvalue_to_mrb_value(mrb, getEnv(), type, ret);
 
@@ -770,7 +762,7 @@ void jam_init_base(mrb_state* mrb, jlong threadId) {
     mrb_define_method(mrb, clsKern, "__jam_call__", jam_call, MRB_ARGS_REQ(1));
     mrb_define_method(mrb, clsKern, "__from_java__", jam_rbobj_to_value, MRB_ARGS_NONE());
     mrb_define_method(mrb, clsKern, "proxy", jam_proxy, MRB_ARGS_REQ(1));
-    mrb_define_method(mrb, clsKern, "_to_java_", jam_to_java, MRB_ARGS_REQ(2));
+    mrb_define_method(mrb, clsKern, "_to_java_", jam_to_java, MRB_ARGS_REQ(1));
     mrb_define_method(mrb, clsKern, "__eval__", jam_eval, MRB_ARGS_REQ(1));  
     mrb_define_method(mrb, clsKern, "__mrb_context__", jam_get_mrb, MRB_ARGS_NONE());     
 	}

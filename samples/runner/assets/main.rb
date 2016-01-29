@@ -3,15 +3,18 @@ java.import "android/widget/ListView"
 
 class Main < JamRuby::Activity
   def on_create state
-    files = ["#{getBaseDir}/custom_view.rb", "#{getBaseDir}/thread.rb","#{getBaseDir}/multi_progress.rb","#{getBaseDir}/download.rb"]
-    aa    = JamRuby::ArrayAdapter.new(self, files.map do |f| File.basename f end)
+    files = Dir.entries(getBaseDir).find_all do |f| 
+      f.split(".").last == "rb"
+    end
+    
+    aa    = JamRuby::ArrayAdapter.new(self, files)
     lv    = Android::Widget::ListView.new self
     
     lv.setAdapter aa
     
-    lv.setOnItemClickListener do |q,e, id, n|
+    lv.setOnItemClickListener do |list_view, view, pos, id|
       intent = JamRuby::Intent.createComponent(getBaseContext, Org::Jamruby::Runner::SpawnedActivity)
-      intent.putExtra("org.jamruby.runner.spawned.MAIN", "#{files[id]}")
+      intent.putExtra("org.jamruby.runner.spawned.MAIN", "#{getBaseDir}/#{files[pos]}")
       intent.setFlags(Android::Content::Intent::FLAG_ACTIVITY_CLEAR_TASK);
       
       startActivity intent

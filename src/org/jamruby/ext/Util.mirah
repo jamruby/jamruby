@@ -59,19 +59,18 @@ class Util
   
   def self.toValue(mrb:State, obj:Object):Value
     if obj.kind_of?(Integer)
-      # Log.i "jamapp", "Make INT"
       Value.new(Integer(obj).intValue)
     elsif obj.kind_of?(Double)
       Value.new(Double(obj).doubleValue)
     elsif obj.kind_of?(Float)
       Value.new(Float(obj).floatValue)
     elsif obj.kind_of?(Boolean)
-      Value.new(Boolean(obj).booleanValue)      
+      Value.new(Boolean(obj).booleanValue) 
+    elsif obj.kind_of?(Long)
+      Value.new(Long(obj).longValue)             
     elsif obj.kind_of?(CharSequence)
-      Log.i "jamapp", "Make String"
       MRuby.strNew(mrb, String(obj))
     else
-      Log.i "jamapp", "Make Object"
       MRuby.jobjectMake(mrb, obj)
     end
   end

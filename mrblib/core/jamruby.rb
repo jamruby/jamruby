@@ -4,7 +4,8 @@ code = [
   "android/util/Log",
   "org/jamruby/ext/Util",
   "org/jamruby/ext/ObjectList",
-  "org/jamruby/ext/FieldHelper"
+  "org/jamruby/ext/FieldHelper",
+  "org/jamruby/ext/RubyObject"  
 ].map do |pth|
   "require '#{pth}'"
 end.join(";")

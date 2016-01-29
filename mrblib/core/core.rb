@@ -56,7 +56,7 @@ end
 
 class Object
   def to_java
-    _to_java_(self, JAM_THREAD_STATE)
+    JAVA::Org::Jamruby::Ext::RubyObject.create(JAM_THREAD_STATE, _to_java_(self))
   end
   
   # mtuby-thread issue
