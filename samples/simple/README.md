@@ -18,9 +18,6 @@ Build
 See `rake -T`
 
 ```
-  ## Set the ruby file to run. defaults to 'custom_view' (./scripts/custom_view.rb)
-  # rake main[<name>]
-
   rake debug
 
   # rake install
