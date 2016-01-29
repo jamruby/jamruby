@@ -3,7 +3,7 @@ Sample JAMRUBY Application
 
 Edit `/sdcard/jamruby/org.hello.mruby/main.rb` on device to modify without reinstall    
 
-![alt tag](https://raw.githubusercontent.com/ppibburr/jamruby/master/sample/screen.png)
+![alt tag](https://raw.githubusercontent.com/ppibburr/jamruby/master/samples/runner/screen.png)
 
 Requirements
 ----
@@ -18,9 +18,6 @@ Build
 See `rake -T`
 
 ```
-  ## Set the ruby file to run. defaults to 'custom_view' (./scripts/custom_view.rb)
-  # rake main[<name>]
-
   rake debug
 
   # rake install
