@@ -1,7 +1,8 @@
 Sample JAMRUBY Application
 ===
+Runs Activity's defined in ruby scripts.  
 
-Edit `/sdcard/jamruby/org.hello.mruby/main.rb` on device to modify without reinstall    
+Scripts stored at `/sdcard/jamruby/scripts/org.hello.runner/samples/` on device.      
 
 ![alt tag](https://raw.githubusercontent.com/ppibburr/jamruby/master/samples/runner/screen.png)
 
