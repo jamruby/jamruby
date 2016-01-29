@@ -14,8 +14,10 @@ import org.jamruby.mruby.MRuby
 
 import android.util.Log
 import android.widget.Toast
+import android.app.Activity
+import android.content.Context
 
-import org.jamruby.ext.JamActivity
+import org.jamruby.ext.MainDispatch
 
 class Util
   def self.readFile(pathname:String)
@@ -63,6 +65,8 @@ class Util
       Value.new(Double(obj).doubleValue)
     elsif obj.kind_of?(Float)
       Value.new(Float(obj).floatValue)
+    elsif obj.kind_of?(Boolean)
+      Value.new(Boolean(obj).booleanValue)      
     elsif obj.kind_of?(CharSequence)
       Log.i "jamapp", "Make String"
       MRuby.strNew(mrb, String(obj))
@@ -72,20 +76,20 @@ class Util
     end
   end
   
-  def self.viewById(id:int)
-    JamActivity.getInstance.findViewById(id)
+  def self.viewById(a:Activity, id:int)
+    a.findViewById(id)
   end
   
-  def self.toast(msg:String):void
-    t = Toast.makeText JamActivity.getInstance, msg, 1000
+  def self.toast(a:Context, msg:String):void
+    t = Toast.makeText a, msg, 1000
     t.show
   end
   
-  def self.toast2(msg:String):Toast
-    t = Toast.makeText JamActivity.getInstance, msg, 1000
+  def self.toast2(a:Context, msg:String):Toast
+    t = Toast.makeText a, msg, 1000
     t.show
     t
-  end  
+  end 
   
   def self.enums e:Class
     ol = ObjectList.new
@@ -149,29 +153,14 @@ class Util
     return va
   end
   
-  def self.rubySendMain(m:String, ol:ObjectList):void
-    JamActivity.getInstance.rubySendMain m, ol
+  def self.rubySendMain(d:MainHandle, m:String, ol:ObjectList):void
+    d.rubySendMain m, ol
   end
   
-  def self.rubySendMainBlock(m:String, ol:ObjectList):void
-    JamActivity.getInstance.rubySendMainBlock m, ol
+  def self.rubySendMainWithSelfFromResult(d:MainHandle, target:String, m:String, ol:ObjectList):void
+    d.rubySendMainWithSelfFromResult target, m, ol
   end  
   
-  def self.rubySend(m:String, ol:ObjectList):void
-    JamActivity.getInstance.rubySend m, ol
-  end
-  
-  def self.rubySendBlock(m:String, ol:ObjectList):void
-    JamActivity.getInstance.rubySendBlock m, ol
-  end  
-  
-  def self.rubySendWithSelfFromReturn(fun:String, m:String, ol:ObjectList):void
-    JamActivity.getInstance.rubySendWithSelfFromReturn fun, m, ol
-  end    
-  
-  def self.rubySendWithSelfFromReturnBlock(fun:String, m:String, ol:ObjectList):void
-    JamActivity.getInstance.rubySendWithSelfFromReturnBlock fun, m, ol
-  end
   
   def self.objectArrayToValueArray(mrb:State, oa:Object[]):Value[]
     va = Value[oa.length]
@@ -214,5 +203,9 @@ class Util
   
   def self.objArrayGet(a:Object[], i:int):Object
     a[i]
+  end
+  
+  def self.objectListFillMrbArray(ol:ObjectList, a:RubyObject):void
+    a.send "push", ol
   end    
 end

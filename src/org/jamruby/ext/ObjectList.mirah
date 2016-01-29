@@ -30,6 +30,14 @@ class ObjectList < ArrayList
     add obj
   end
   
+  def addBool(obj:boolean):void
+    add obj
+  end
+  
+  def setBool(idx:int, val:boolean):void
+    set(idx, val)
+  end  
+  
   def setInt(idx:int, val:int):void
     set(idx, val)
   end

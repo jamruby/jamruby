@@ -14,6 +14,15 @@ import org.jamruby.io.FileDescriptorHelper;
 
 
 public class MRuby {
+	public static Value threadInit(long parent, Value argv, Value proc, long child) {
+		return n_threadInit(parent, argv, proc, child);
+	}
+  
+	public static Value transferProc(long parent, Value proc, long child) {
+		return n_transferProc(parent, proc, child);
+	}     
+  
+  
 	public static Value loadString(State state, String code) {
 		return n_loadString(state.nativeObject(), code);
 	}
@@ -97,6 +106,10 @@ public class MRuby {
 	public static void defineConst(State state, RClass m, String name, Value value) {
 		n_defineConst(state.nativeObject(), m.nativeObject(), name, value);
 	}
+  
+	public static void defineConst(long state, RClass m, String name, Value value) {
+		n_defineConst(state, m.nativeObject(), name, value);
+	}  
 	
 	public static Value instanceNew(State state, Value cv) {
 		return n_instanceNew(state.nativeObject(), cv);
@@ -121,6 +134,10 @@ public class MRuby {
 	public static RClass classGet(State state, String name) {
 		return new RClass(n_classGet(state.nativeObject(), name));
 	}
+  
+	public static RClass classGet(long state, String name) {
+		return new RClass(n_classGet(state, name));
+	}  
 	
 	public static RClass classObjGet(State state, String name) {
 		return new RClass(n_classObjGet(state.nativeObject(), name));
@@ -173,6 +190,10 @@ public class MRuby {
   public static Value jobjectMake(State state, Object obj) {
     return n_jobjectMake(state.nativeObject(), obj);
   }
+  
+  public static Value jobjectMake(long state, Object obj) {
+    return n_jobjectMake(state, obj);
+  }  
   
 	public static Symbol intern(State state, String name) {
 		return new Symbol(n_intern(state.nativeObject(), name));
@@ -388,6 +409,9 @@ public class MRuby {
 	private static native int n_redirect_stderr() throws IOException;
 	private static native int n_redirect_stdin() throws IOException;
 	
+  private static native Value n_threadInit(long parent_mrb, Value argv, Value proc, long child_mrb);  
+  private static native Value n_transferProc(long parent_mrb, Value proc, long child_mrb);  
+    
 	// Non-categorized methods
 	private static native int n_loadIrep(long mrb, String path) throws FileNotFoundException;
 	private static native long n_parseString(long mrb, String command);

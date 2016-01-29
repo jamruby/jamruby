@@ -8,8 +8,8 @@ import org.jamruby.mruby.Value
 
 
 class RubyObject
-  def initialize mrb:long, ins:Value
-    @mrb = State.new(mrb)
+  def initialize mrb:State, ins:Value
+    @mrb = mrb
     @ins = ins
   end
   
@@ -21,7 +21,7 @@ class RubyObject
     @ins
   end
   
-  def self.create mrb:long, ins:Value
+  def self.create mrb:State, ins:Value
     RubyObject.new(mrb, ins)
   end
 
