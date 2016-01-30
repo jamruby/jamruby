@@ -9,21 +9,16 @@ MRuby::Build.new do |conf|
   conf.mrbc do |mrbc|
     mrbc.compile_options = "-g -B%{funcname} -o-" # The -g option is required for line numbers
   end
-
+  conf.gem :github=>"mattn/mruby-thread"
   conf.gem 'mrbgems/mruby-print'
   conf.gem 'mrbgems/mruby-compiler'
   conf.gem 'mrbgems/mruby-string-ext'  
-
-  # This is hard coded into android jamruby
-  conf.gem :github=>"mattn/mruby-thread"
-  
-  # Optional
-  
-  conf.gem :github=>"iij/mruby-io"                  # Sockets, File, IO
-  conf.gem :github=>"luisbebop/mruby-polarssl"      # if doing https
-  conf.gem :github=>"matsumoto-r/mruby-simplehttp"  #  
-  conf.gem :github=>"matsumoto-r/mruby-httprequest" # 
-  conf.gem :github=>"ppibburr/pbr-download"         # A Download library 
+  conf.gem :github=>"iij/mruby-io" 
+  conf.gem :github=>"iij/mruby-dir"  
+  conf.gem :github=>"luisbebop/mruby-polarssl"  
+  conf.gem :github=>"ppibburr/mruby-simplehttp"   
+  conf.gem :github=>"ppibburr/mruby-httprequest" 
+  conf.gem "../pbr-download"  
 end
 
 MRuby::CrossBuild.new('android-armeabi') do |conf|
@@ -38,14 +33,11 @@ MRuby::CrossBuild.new('android-armeabi') do |conf|
   conf.gem 'mrbgems/mruby-print'
   conf.gem 'mrbgems/mruby-compiler'
   conf.gem 'mrbgems/mruby-string-ext'  
-  
-  # Optional
-  
-  conf.gem :github=>"iij/mruby-io"                  # Sockets, File, IO
-  conf.gem :github=>"luisbebop/mruby-polarssl"      # if doing https
-  conf.gem :github=>"matsumoto-r/mruby-simplehttp"  #  
-  conf.gem :github=>"matsumoto-r/mruby-httprequest" # 
-  conf.gem :github=>"ppibburr/pbr-download"         # A Download library 
+  conf.gem :github=>"iij/mruby-io" 
+  conf.gem :github=>"iij/mruby-dir"  
+  conf.gem :github=>"matsumoto-r/mruby-simplehttp"   
+  conf.gem :github=>"matsumoto-r/mruby-httprequest" 
+  conf.gem :github=>"ppibburr/pbr-download"    
 end
 
 MRuby::CrossBuild.new('android-armeabi-v7a') do |conf|
@@ -59,16 +51,13 @@ MRuby::CrossBuild.new('android-armeabi-v7a') do |conf|
   end
 
   conf.gem 'mrbgems/mruby-print'
-  conf.gem 'mrbgems/mruby-compiler'
+  conf.gem 'mrbgems/mruby-compiler'  
   conf.gem 'mrbgems/mruby-string-ext'  
-  
-  # Optional
-  
-  conf.gem :github=>"iij/mruby-io"                  # Sockets, File, IO
-  conf.gem :github=>"luisbebop/mruby-polarssl"      # if doing https
-  conf.gem :github=>"matsumoto-r/mruby-simplehttp"  #  
-  conf.gem :github=>"matsumoto-r/mruby-httprequest" # 
-  conf.gem :github=>"ppibburr/pbr-download"         # A Download library 
+  conf.gem :github=>"iij/mruby-io" 
+  conf.gem :github=>"iij/mruby-dir"
+  conf.gem :github=>"matsumoto-r/mruby-simplehttp"   
+  conf.gem :github=>"matsumoto-r/mruby-httprequest" 
+  conf.gem :github=>"ppibburr/pbr-download"    
 end
 
 MRuby::CrossBuild.new('android-x86') do |conf|
@@ -83,13 +72,11 @@ MRuby::CrossBuild.new('android-x86') do |conf|
   conf.gem 'mrbgems/mruby-print'
   conf.gem 'mrbgems/mruby-compiler'
   conf.gem 'mrbgems/mruby-string-ext'  
-  
-  # Optional
-  
-  conf.gem :github=>"iij/mruby-io"                  # Sockets, File, IO
-  conf.gem :github=>"luisbebop/mruby-polarssl"      # if doing https
-  conf.gem :github=>"matsumoto-r/mruby-simplehttp"  #  
-  conf.gem :github=>"matsumoto-r/mruby-httprequest" # 
-  conf.gem :github=>"ppibburr/pbr-download"         # A Download library
+  conf.gem :github=>"iij/mruby-io" 
+  conf.gem :github=>"iij/mruby-dir"
+  conf.gem :github=>"luisbebop/mruby-polarssl"  
+  conf.gem :github=>"matsumoto-r/mruby-simplehttp"   
+  conf.gem :github=>"matsumoto-r/mruby-httprequest" 
+  conf.gem "../pbr-download"   
 end
 
