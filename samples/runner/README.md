@@ -3,7 +3,7 @@ Sample JAMRUBY Application
 
 Edit `/sdcard/jamruby/org.hello.mruby/main.rb` on device to modify without reinstall    
 
-<img height=25% src=https://raw.githubusercontent.com/ppibburr/jamruby/master/samples/runner/screen.png></img>
+<img height=320 src=https://raw.githubusercontent.com/ppibburr/jamruby/master/samples/runner/screen.png></img>
 
 Requirements
 ----
