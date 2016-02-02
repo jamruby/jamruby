@@ -1,7 +1,8 @@
-Sample JAMRUBY Application
+Ruby Activity Launcher
 ===
+Run and Edit Ruby Activities.  
 
-Edit `/sdcard/jamruby/org.hello.mruby/main.rb` on device to modify without reinstall    
+Preloaded samples at `/sdcard/jamruby/scripts/org.hello.mruby/samples`   
 
 <td><img height=320 src=https://raw.githubusercontent.com/ppibburr/jamruby/master/samples/runner/screen.png></img><td>
 <td><img height=320 src=https://raw.githubusercontent.com/ppibburr/jamruby/master/samples/runner/screen1.png></img><td>
