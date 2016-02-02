@@ -149,6 +149,7 @@ class MainHandle < Handle
   def initMain
     MRuby.defineConst(jamruby.state, MRuby.classGet(jamruby.state, "Object"), "JAM_MAIN_HANDLE", Util.toValue(jamruby.state, self))
     initThread jamruby.state
+    jamruby.loadString("$:.unshift(File.expand_path('#{root}')) unless $:.include?('#{root}') || $:.include?(File.expand_path('#{root}'))")
   end
 
   def initThread(mrb:State):void

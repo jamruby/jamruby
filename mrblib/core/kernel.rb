@@ -103,15 +103,35 @@ class Object
   # Else it will import a Java namespace under ::JAVA
   #
   # @param [String] path
-  def require path
+  def require path    
+    if File.exist?(path) and !File.directory?(path)
+    elsif File.exist?(tmp = path+".rb")
+      path = tmp
+    elsif File.exist?(tmp = path+".mrb") 
+      path = tmp
+    elsif $:.is_a?(Array)
+      $:.each do |dir|
+        if File.exist?(tmp = "#{dir}/#{path}") and !File.directory?(tmp)
+          path = tmp
+          next
+        elsif File.exist?(tmp = "#{dir}/#{path}.rb")
+          path = tmp
+          next
+        elsif File.exist?(tmp = "#{dir}/#{path}.mrb")
+          path = tmp
+          next
+        end                
+      end
+    end   
+    
     q = path.split(".").last
+    
     if q == "rb"
-      JAM_MAIN_HANDLE.loadScriptFull __mrb_context__, path
+      __eval__ "JAM_MAIN_HANDLE.loadScriptFull __mrb_context__, '#{path}'"
     elsif q == "mrb"
       JAM_MAIN_HANDLE.loadCompiledFull __mrb_context__, path
     else
       __jam_require__ path
     end
   end
-end
-  
+end  

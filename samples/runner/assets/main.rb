@@ -67,6 +67,14 @@ class Main < JamRuby::Activity
     run.setText "Run"
     save.setText "Save" 
     
+    undo.setOnClickListener do
+      @wv.loadUrl("javascript:undo();")
+    end
+    
+    re_do.setOnClickListener do
+      @wv.loadUrl("javascript:redo();")
+    end    
+    
     run.setOnClickListener do
       if @ready
         @wv.loadUrl("javascript:save('#{@edit}');run();")
@@ -104,6 +112,7 @@ class Main < JamRuby::Activity
   
   def on_load
     @wv.loadUrl("javascript:loadFile('#{@edit}');")
+    @ready = true
   end
   
   def on_run path=@edit

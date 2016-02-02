@@ -1,4 +1,7 @@
 GC.generational_mode = false
+
+$: = []
+
 class Module
   def implement mod
     class_eval do

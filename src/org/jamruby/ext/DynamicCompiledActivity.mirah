@@ -9,7 +9,8 @@ class DynamicCompiledActivity < JamCompiledActivity
     @source = false
     
     if getIntent.getExtras != nil
-      setProgram getIntent.getStringExtra("org.jamruby.ext.dynamic.MAIN")
+      setProgram path=getIntent.getStringExtra("org.jamruby.ext.dynamic.MAIN")
+      main.jamruby.loadString("$:.unshift(File.expand_path(File.dirname('#{path}'))) unless $:.include?(File.dirname('#{path}')) || $:.include?(File.expand_path(File.dirname('#{path}')))")
       @source = true
     end
   end
