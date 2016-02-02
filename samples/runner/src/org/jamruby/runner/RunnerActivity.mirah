@@ -35,6 +35,9 @@ class RunnerActivity < JamActivity
     
     inputStream = am.open("scripts/download.rb");
     Util.createFileFromInputStream("#{base}/download.rb", inputStream);
+    
+    inputStream = am.open("scripts/edit.rb");
+    Util.createFileFromInputStream("#{base}/edit.rb", inputStream);    
   end
   
   def onBeforeInit():void

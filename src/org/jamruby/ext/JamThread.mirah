@@ -11,71 +11,37 @@ import org.jamruby.mruby.MRuby
 import org.jamruby.mruby.Value
 import org.jamruby.mruby.State
 
-class Runner
-  implements Runnable
-  def initialize t:JamThread, main:MainHandle, ol:ObjectList, proc:RubyObject
-    @thread = t
-    @proc = proc
-    @main = main
-    @argv = ol
+class Handle
+  def initialize()
+    @jamruby     = Jamruby(nil)
+    @top_self    = RubyObject(nil)
+    @did_init    = false
   end
   
-  def run
-    @jamruby = Jamruby.new
-    MRuby.defineConst(jamruby.state, MRuby.classGet(jamruby.state, "Object"), "JAM_MAIN_HANDLE", Util.toValue(jamruby.state, @main))
-
-    main.initThread jamruby.state
-
-    ary = MRuby.arrayNew jamruby.state
-    
-    @argv.each do |a|
-      MRuby.arrayPush jamruby.state, ary, Util.toValue(jamruby.state, a)
-    end
-    
-    MRuby.threadInit proc.mrb.nativeObject, ary, proc.ins, @jamruby.state.nativeObject
-    
-    @jamruby.close
+  def did_init:boolean
+    @did_init
   end
-end
 
-
-class JamThread < Thread
-  def initialize main:MainHandle, argv:ObjectList, proc:RubyObject
-    super Runner.new(self, main, argv, proc)
-  end
-end
-
-
-interface MainDispatch do
-  def runOnMainThread(r:Runnable):void
-  end
-end
-
-class MainHandle  
-  def initialize main_runner:MainDispatch, root:String
-    @jamruby     = Jamruby.new
-    @top_self    = RubyObject.new(jamruby.state, MRuby.topSelf(jamruby.state))
-    @root        = root
-    @main_runner = main_runner
-    
-    @core_libs = ArrayList.new
-    @core_libs.add ""
-    @core_libs.remove(0)
-  end
-  
-  def top_self
+  def top_self():RubyObject
     @top_self
   end
   
-  def init():void
-    initMain  
+  def init:void
+    @jamruby  = Jamruby.new
+    @top_self = RubyObject.new(jamruby.state, MRuby.topSelf(jamruby.state))  
+    @did_init = true  
   end
   
-  def core_libs
-    @core_libs
+  def send(mname:String, ol:ObjectList):InvokeResult
+     @top_self.send mname, ol 
   end
   
-  def jamruby
+  def close:void
+    @jamruby.close    
+  end
+  
+  
+  def jamruby:Jamruby
     @jamruby
   end
   
@@ -101,7 +67,83 @@ class MainHandle
   end
   
   def topSelfCall method:String       
-    @top_self.send method, ObjectList.create
+    top_self.send method, ObjectList.create
+  end    
+end
+
+class SubHandle < Handle
+  def initialize main:MainHandle, ol:ObjectList, proc:RubyObject
+    super()
+  
+    @proc = proc
+    @main = main
+    @argv = ol
+  end
+  
+  def init:void
+    super
+    
+    MRuby.defineConst(jamruby.state, MRuby.classGet(jamruby.state, "Object"), "JAM_MAIN_HANDLE", Util.toValue(jamruby.state, @main))
+
+    main.initThread jamruby.state
+
+    ary = MRuby.arrayNew jamruby.state
+    
+    @argv.each do |a|
+      MRuby.arrayPush jamruby.state, ary, Util.toValue(jamruby.state, a)
+    end
+    
+    MRuby.threadInit proc.mrb.nativeObject, ary, proc.ins, jamruby.state.nativeObject
+  end
+end
+
+class Runner < SubHandle
+  implements Runnable
+  def initialize t:JamThread, main:MainHandle, ol:ObjectList, proc:RubyObject
+    @thread = t
+    super main, ol, proc
+  end
+  
+  def run
+    init
+  
+    close    
+  end
+end
+
+
+class JamThread < Thread
+  def initialize main:MainHandle, argv:ObjectList, proc:RubyObject
+    super Runner.new(self, main, argv, proc)
+  end
+end
+
+
+interface MainDispatch do
+  def runOnMainThread(r:Runnable):void
+  end
+end
+
+class MainHandle < Handle
+  def initialize main_runner:MainDispatch, root:String    
+    super()
+  
+    @root        = root
+    @main_runner = main_runner
+    
+    @core_libs = ArrayList.new
+    @core_libs.add ""
+    @core_libs.remove(0)
+  end
+  
+  def init():void
+    super()
+    
+    initMain  
+  end
+  
+  def core_libs
+    @core_libs
   end
   
   def initMain
@@ -141,14 +183,19 @@ class MainHandle
     while q == true; end
   end  
   
-  synchronized def rubySendMainWithSelfFromResult(target:String, fn:String, ol:ObjectList):void
+  synchronized def rubySendMainWithSelfFromResult(target:String, fn:String, ol:ObjectList):void    
     ts = top_self
 
-    jamruby = @jamruby
+    state = jamruby.state
 
     @main_runner.runOnMainThread do
-      ins = ts.send target, ObjectList.create
-      MRuby.funcallArgv jamruby.state, ins, fn, ol.size, Util.arrayListToValueArray(jamruby.state, ol)
+      result = ts.send(target, ObjectList.create)
+      if !result.error
+        MRuby.funcallArgv state, result.getResult, fn, ol.size, Util.arrayListToValueArray(state, ol)
+        return
+      end
+      
+      raise Throwable.new(result.getErrorMessage, result.getErrorDetail)
     end
   end  
   
@@ -157,12 +204,18 @@ class MainHandle
 
     l = true
 
-    jamruby = @jamruby
+    state = jamruby.state
 
     @main_runner.runOnMainThread do
-      ins = ts.send target, ObjectList.create
-      MRuby.funcallArgv jamruby.state, ins, fn, ol.size, Util.arrayListToValueArray(jamruby.state, ol)
+      result = ts.send(target, ObjectList.create)
+      if !result.error
+        MRuby.funcallArgv state, result.getResult, fn, ol.size, Util.arrayListToValueArray(state, ol)
+        l = false
+        return
+      end
+      
       l = false
+      raise Throwable.new(result.getErrorMessage, result.getErrorDetail)
     end
     
     while l == true; end
@@ -171,24 +224,60 @@ class MainHandle
   synchronized def transferProc from:RubyObject
     r=Value(nil)
     b = true
-    jamruby = @jamruby
+    state = jamruby.state
     main_runner.runOnMainThread do
-      r = MRuby.transferProc from.mrb.nativeObject, from.ins, jamruby.state.nativeObject
+      r = MRuby.transferProc from.mrb.nativeObject, from.ins, state.nativeObject
       b = false
     end
     while b; end
     return RubyObject.new(from.mrb, r)
   end
-  
-  synchronized def runProcOnMainThread(ol:ObjectList, fun:RubyObject):void
-    state = jamruby.state
+end  
 
-    main_runner.runOnMainThread do
-      ary = MRuby.arrayNew state
-      ol.each do |a|
-        MRuby.arrayPush state, ary, Util.toValue(state, a)
-      end
-      MRuby.funcall(state, fun.ins, "__jam_call__", 1, ary)
+class JavascriptObject < SubHandle 
+  def initialize(main:MainHandle, ol:ObjectList, proc:RubyObject)
+    super
+  end
+ 
+  def send(name:String, params:String):String
+    ol = ObjectList.create
+    
+    if params != nil
+      ol.addStr params
     end
-  end    
-end     
+    
+    result = super name, ol
+    
+    if result.error
+      return "null"
+    end
+    
+    result = RubyObject.new(jamruby.state, result.getResult).send "to_json", ObjectList.create
+    
+    return result.getResult.asString()
+    
+    if result.error
+      return "null"
+    end 
+  end
+
+  def dispatch_argv(name:String, params:String):String
+    if did_init == false
+      init()
+    end
+    
+    result = send name, params 
+    
+    return result
+  end
+  
+  def dispatch(name:String):String
+    if did_init == false
+      init()
+    end
+    
+    result = send name, String(nil)
+    
+    return result
+  end  
+end   

@@ -13,6 +13,7 @@ MRuby::Build.new do |conf|
   conf.gem 'mrbgems/mruby-print'
   conf.gem 'mrbgems/mruby-compiler'
   conf.gem 'mrbgems/mruby-string-ext'  
+  conf.gem :github=>"iij/mruby-iijson"  
   conf.gem :github=>"iij/mruby-io" 
   conf.gem :github=>"iij/mruby-dir"  
   conf.gem :github=>"luisbebop/mruby-polarssl"  
@@ -33,6 +34,7 @@ MRuby::CrossBuild.new('android-armeabi') do |conf|
   conf.gem 'mrbgems/mruby-print'
   conf.gem 'mrbgems/mruby-compiler'
   conf.gem 'mrbgems/mruby-string-ext'  
+  conf.gem :github=>"iij/mruby-iijson"  
   conf.gem :github=>"iij/mruby-io" 
   conf.gem :github=>"iij/mruby-dir"  
   conf.gem :github=>"matsumoto-r/mruby-simplehttp"   
@@ -53,6 +55,7 @@ MRuby::CrossBuild.new('android-armeabi-v7a') do |conf|
   conf.gem 'mrbgems/mruby-print'
   conf.gem 'mrbgems/mruby-compiler'  
   conf.gem 'mrbgems/mruby-string-ext'  
+  conf.gem :github=>"iij/mruby-iijson"  
   conf.gem :github=>"iij/mruby-io" 
   conf.gem :github=>"iij/mruby-dir"
   conf.gem :github=>"matsumoto-r/mruby-simplehttp"   
@@ -72,6 +75,7 @@ MRuby::CrossBuild.new('android-x86') do |conf|
   conf.gem 'mrbgems/mruby-print'
   conf.gem 'mrbgems/mruby-compiler'
   conf.gem 'mrbgems/mruby-string-ext'  
+  conf.gem :github=>"iij/mruby-iijson"
   conf.gem :github=>"iij/mruby-io" 
   conf.gem :github=>"iij/mruby-dir"
   conf.gem :github=>"luisbebop/mruby-polarssl"  

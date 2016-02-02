@@ -1,13 +1,6 @@
 package org.jamruby.runner
 
-import org.jamruby.ext.JamActivity
+import org.jamruby.ext.DynamicActivity
 
-class SpawnedActivity < JamActivity 
-  def onBeforeInit():void  
-    setProgram "#{root}/spawn.rb"
-    
-    if getIntent.getExtras != nil
-      setProgram getIntent.getStringExtra("org.jamruby.runner.spawned.MAIN")
-    end
-  end
+class SpawnedActivity < DynamicActivity
 end

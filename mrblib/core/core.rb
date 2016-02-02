@@ -54,12 +54,8 @@ class JObject
   end
 end 
 
-class Object
-  def to_java
-    JAVA::Org::Jamruby::Ext::RubyObject.create(JAM_THREAD_STATE, _to_java_(self))
-  end
-  
-  # mtuby-thread issue
+class Object  
+  # mruby-thread issue
   alias :__is_a__ :"is_a?"
   def is_a?(w)
     if w == ::String or w == "".class

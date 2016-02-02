@@ -1,4 +1,5 @@
-__eval__ "require 'java/lang/Thread'"
+__eval__ "require 'java/lang/Thread';"+
+         "require 'org/jamruby/ext/InvokeResult'"
 
 module JamRuby
   class Message
@@ -29,6 +30,23 @@ module JamRuby
   end
 end
 
+class Exception
+  class Wrapper
+    def initialize error
+      @error = error
+    end
+    
+    def get_error
+      @error
+    end
+  end
+  
+  def to_java
+    ins = Wrapper.new self
+    JAVA::Org::Jamruby::Ext::RubyObject.create(JAM_THREAD_STATE, _to_java_(ins))
+  end
+end
+
 module Kernel          
   def print *o
   
@@ -56,6 +74,24 @@ module Kernel
   
   def main(_self_ = nil)
     JamRuby::Message::MainMessage.new(_self_, _self_ ? "rubySendMainWithSelfFromResult" : "rubySendMain")
+  end
+  
+  def to_java
+    JAVA::Org::Jamruby::Ext::RubyObject.create(JAM_THREAD_STATE, _to_java_(self))
+  end  
+  
+  def send_with_result mname, result, *o
+    return send(mname, *o)
+  rescue => e
+    result = JamRuby::NativeWrapper.as result, JAVA::Org::Jamruby::Ext::InvokeResult
+    
+    result.setError true
+    result.setErrorObject e.to_java
+    result.setErrorMessage "#{mname}: #{e}"
+    result.setErrorDetail e.inspect
+    result.setErrorBacktrace(e.backtrace.to_object_list.native)
+  
+    return nil
   end
 end
 
