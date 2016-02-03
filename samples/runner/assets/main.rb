@@ -4,6 +4,9 @@ java.import "android/webkit/WebView"
 java.import "android/widget/ViewSwitcher"
 java.import "android/widget/Button"
 
+require "jamruby/file_chooser"
+require "jamruby/javascript_interface"
+
 class Main < JamRuby::Activity
   def is_compiled? path
     File.basename(path).split(".").last == "mrb" 

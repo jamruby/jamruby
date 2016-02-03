@@ -6,21 +6,20 @@ class DynamicCompiledActivity < JamCompiledActivity
   def onBeforeInit():void  
     setProgram "#{root}/lib/dynamic.rb"
     
-    @source = false
+    @source = true
     
     if getIntent.getExtras != nil
       setProgram path=getIntent.getStringExtra("org.jamruby.ext.dynamic.MAIN")
       main.jamruby.loadString("$:.unshift(File.expand_path(File.dirname('#{path}'))) unless $:.include?(File.dirname('#{path}')) || $:.include?(File.expand_path(File.dirname('#{path}')))")
-      @source = true
+      @source = false
     end
   end
   
-  def loadMain:void
-    if @source
+  def loadMain
+    if !@source
       super
-      return
+    else
+      main.loadScript(program)
     end
-    
-    main.loadScript(program)
-  end   
+  end
 end

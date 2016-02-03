@@ -1,5 +1,7 @@
 java.import "android/widget/ListView"   
 
+require "jamruby/array_adapter"
+
 class Main < JamRuby::Activity
   def on_create state
     data  = ["Apples", "Oranges", "Steak", "Cheese"]

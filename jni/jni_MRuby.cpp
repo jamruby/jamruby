@@ -101,25 +101,29 @@ JNIEXPORT jint JNICALL Java_org_jamruby_mruby_MRuby_n_1redirect_1stdin
 /*
  * Class:     org_jamruby_mruby_MRuby
  * Method:    n_loadIrep
- * Signature: (JLjava/lang/String;)I
+ * Signature: (JLjava/lang/String;)Lorg/jamruby/mruby/Value;
  */
-JNIEXPORT jint JNICALL Java_org_jamruby_mruby_MRuby_n_1loadIrep
+JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1loadIrep
   (JNIEnv *env, jclass clazz, jlong mrb, jstring path)
 {
-	int n = -1;
 	try {
 		safe_jni::safe_string file_path(getEnv(), path);
 		FILE *fp = fopen(file_path.string(), "rb");
-		mrb_value ret;
 		if (NULL == fp) {
 			throw safe_jni::file_not_found_exception(strerror(errno));
 		}
-		ret = mrb_load_irep_file(MRBSTATE(mrb), fp);
+    
+    mrb_value const &value = mrb_load_irep_file(MRBSTATE(mrb), fp);
 		fclose(fp);
-	} catch (safe_jni::exception &e) {
+    return create_value(getEnv(), value);
+    
+	} catch (safe_jni::exception &e) { 
 		throw_exception(getEnv(), e.java_exception_name(), e.message());
 	}
-	return n;
+  
+  // ...
+  mrb_value const &value = mrb_nil_value();
+  return create_value(getEnv(), value);   
 }
 
 /*

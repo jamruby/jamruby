@@ -21,9 +21,6 @@ class RunnerActivity < JamActivity
   
     am = getAssets();
  
-    inputStream = am.open("spawn.rb");
-    Util.createFileFromInputStream("#{root}/spawn.rb", inputStream); 
-  
     inputStream = am.open("scripts/custom_view.rb");
     Util.createFileFromInputStream("#{base}/custom_view.rb", inputStream);
     
@@ -35,9 +32,6 @@ class RunnerActivity < JamActivity
     
     inputStream = am.open("scripts/download.rb");
     Util.createFileFromInputStream("#{base}/download.rb", inputStream);
-    
-    inputStream = am.open("scripts/edit.rb");
-    Util.createFileFromInputStream("#{base}/edit.rb", inputStream);    
   end
   
   def onBeforeInit():void

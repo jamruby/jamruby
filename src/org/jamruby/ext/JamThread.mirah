@@ -136,6 +136,10 @@ class MainHandle < Handle
     @core_libs.remove(0)
   end
   
+  def root
+    @root
+  end
+  
   def init():void
     super()
     

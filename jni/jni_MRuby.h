@@ -52,9 +52,9 @@ JNIEXPORT jint JNICALL Java_org_jamruby_mruby_MRuby_n_1redirect_1stdin
 /*
  * Class:     org_jamruby_mruby_MRuby
  * Method:    n_loadIrep
- * Signature: (JLjava/lang/String;)I
+ * Signature: (JLjava/lang/String;)Lorg/jamruby/mruby/Value;
  */
-JNIEXPORT jint JNICALL Java_org_jamruby_mruby_MRuby_n_1loadIrep
+JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1loadIrep
   (JNIEnv *, jclass, jlong, jstring);
 
 /*

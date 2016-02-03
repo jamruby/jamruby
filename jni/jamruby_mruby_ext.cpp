@@ -48,7 +48,7 @@ namespace jamruby {
 
 static std::string gen_java_class_name(std::string const &name, int const &len);
 static std::string gen_java_inner_class_path(std::string const &name, int const &len);
-static void export_jclass(mrb_state *mrb, JNIEnv *env, jclass cls, std::string const &name, std::string const &nice);
+static mrb_value export_jclass(mrb_state *mrb, JNIEnv *env, jclass cls, std::string const &name, std::string const &nice);
 static RClass* define_class(mrb_state *mrb, JNIEnv *env, RClass *parent, jclass cls, std::string const &name);
 static mrb_value java_class_method(mrb_state *mrb, mrb_value self);
 static mrb_value java_object_method(mrb_state *mrb, mrb_value self);
@@ -104,9 +104,7 @@ mrb_value jamruby_kernel_require(mrb_state *mrb, mrb_value self)
 		return mrb_nil_value(); // don't reach here
 	}
 
-	export_jclass(mrb,getEnv(), cls.get(), class_name, gen_java_inner_class_path(class_name.c_str(), len));
-
-	return mrb_nil_value();
+	return export_jclass(mrb,getEnv(), cls.get(), class_name, gen_java_inner_class_path(class_name.c_str(), len));
 }
 
 namespace org {
@@ -140,7 +138,7 @@ static std::string gen_java_inner_class_path(std::string const &name, int const 
 	return copied;
 }
 
-static void export_jclass(mrb_state *mrb, JNIEnv *env, jclass cls, std::string const &name, std::string const &nice)
+static mrb_value export_jclass(mrb_state *mrb, JNIEnv *env, jclass cls, std::string const &name, std::string const &nice)
 {
 	std::string::size_type ofst = 0;
 	RClass *parent = NULL;
@@ -154,7 +152,8 @@ static void export_jclass(mrb_state *mrb, JNIEnv *env, jclass cls, std::string c
 		if (std::string::npos == n) {
 			RClass* target = define_class(mrb,getEnv(), parent, cls, mod_name);
 			 mrb_define_const(mrb, target, "CLASS_PATH", mrb_str_new_cstr(mrb, name.c_str()));
-			break;
+       
+			 return mrb_obj_value(target);
 		}
 		ofst = n + 1;
     RClass *j;
@@ -184,10 +183,12 @@ static void export_jclass(mrb_state *mrb, JNIEnv *env, jclass cls, std::string c
 		if (NULL == mod) {
 			// TODO error handling
 			LOGE("failed to define module (%s)\n", mod_name.c_str());
-			return;
+			return mrb_nil_value();
 		}
 		parent = mod;
 	}
+  
+  return mrb_nil_value();
 }
 
 static bool is_method_defined(mrb_state *mrb, RClass *target, char const * const name)

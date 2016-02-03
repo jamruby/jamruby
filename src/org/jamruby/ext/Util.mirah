@@ -19,6 +19,28 @@ import android.content.Context
 
 import org.jamruby.ext.MainDispatch
 
+class Parameter
+  def initialize obj:Object
+    @obj = obj
+    @name = String(nil)
+    if @obj != nil
+      @name = obj.getClass.getName
+    end
+  end
+  
+  def name
+    @name
+  end
+  
+  def object
+    @obj
+  end
+  
+  def isNull
+    @obj == nil
+  end
+end
+
 class Util
   def self.readFile(pathname:String)
 
@@ -138,16 +160,12 @@ class Util
   
   def self.arrayListToValueArray(mrb:State, al:ArrayList):Value[]
     va = Value[al.size]
-    
-    i = 0
+    i  = 0
     
     al.each do |a|
-      Log.i "jamapp", "Make Value: #{a}"
       va[i] = toValue(mrb, a)
       i+=1
     end
-    
-    Log.i "jamapp", "Make Value: #{i}"  
     
     return va
   end
@@ -206,5 +224,14 @@ class Util
   
   def self.objectListFillMrbArray(ol:ObjectList, a:RubyObject):void
     a.send "push", ol
-  end    
+  end 
+  
+  def self.classNameForJClass(cls:Class):String
+    n = cls.getName
+    Util.p n
+    return String(n)
+  rescue => e
+    Util.p e.toString
+    return String(nil)
+  end   
 end

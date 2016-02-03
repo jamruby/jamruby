@@ -55,6 +55,11 @@ class JObject
   def as what
     what.wrap self
   end
+  
+  def cast class_name
+    cls = __jam_require__ class_name.split(".").join("/")
+    return JamRuby::NativeWrapper.as self, cls
+  end
 end 
 
 class Object  

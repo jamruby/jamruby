@@ -1,5 +1,6 @@
 package org.jamruby.ext
 import org.jamruby.ext.Util
+import org.jamruby.ext.Parameter
 import org.jamruby.ext.ObjectList
 import org.jamruby.ext.RubyObject
 import org.jamruby.mruby.State
@@ -17,16 +18,18 @@ class JamView < View
 
   def onDraw canvas
     ol = ObjectList.new
-    ol.add canvas
+    ol.addStr "on_draw"
+    ol.addObj Parameter.new(canvas)
       
-    r.send "on_draw", ol
+    r.send "send_with_casted_params", ol
   end
   
   def onTouchEvent e
     ol = ObjectList.new
-    ol.add e
+    ol.addStr "on_touch_event"
+    ol.addObj Parameter.new(e)
     
-    r.send "on_touch_event", ol
+    r.send "send_with_casted_params", ol
     true
   end
 end

@@ -27,7 +27,7 @@ public class MRuby {
 		return n_loadString(state.nativeObject(), code);
 	}
   
-	public static int loadIrep(State state, String pth) throws FileNotFoundException {
+	public static Value loadIrep(State state, String pth) throws FileNotFoundException {
 		return n_loadIrep(state.nativeObject(), pth);
 	}
   
@@ -35,11 +35,11 @@ public class MRuby {
 		return n_loadString(state, code);
 	}
   
-	public static int loadIrep(long state, String pth) throws FileNotFoundException {
+	public static Value loadIrep(long state, String pth) throws FileNotFoundException {
 		return n_loadIrep(state, pth);
 	}     
   
-	public static int loadIrep(State state, File f) throws FileNotFoundException {
+	public static Value loadIrep(State state, File f) throws FileNotFoundException {
 		return n_loadIrep(state.nativeObject(), f.getAbsolutePath());
 	}
 	
@@ -413,7 +413,7 @@ public class MRuby {
   private static native Value n_transferProc(long parent_mrb, Value proc, long child_mrb);  
     
 	// Non-categorized methods
-	private static native int n_loadIrep(long mrb, String path) throws FileNotFoundException;
+	private static native Value n_loadIrep(long mrb, String path) throws FileNotFoundException;
 	private static native long n_parseString(long mrb, String command);
 	private static native long n_parseFile(long mrb, String path) throws FileNotFoundException;
 	private static native int n_generateCode(long mrb, long node);

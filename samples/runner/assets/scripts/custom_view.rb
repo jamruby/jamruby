@@ -2,7 +2,9 @@ java.import "android/graphics/Paint"
 java.import "android/graphics/Color"  
 java.import "android/graphics/RectF"  
 java.import "android/graphics/Canvas" 
-java.import "android/view/MotionEvent"        
+java.import "android/view/MotionEvent"  
+
+require "jamruby/view"      
 
 class CircleView < JamRuby::View
   def initialize context, fill=:blue, stroke=:red, pct=0.25
@@ -16,7 +18,6 @@ class CircleView < JamRuby::View
   end
 
   def on_draw canvas
-    canvas = Android::Graphics::Canvas.wrap canvas
     draw_fill canvas
     draw_stroke canvas
   end

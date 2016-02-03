@@ -15,7 +15,15 @@
     
     function run() {
       ruby.dispatch('run');
-    }  
+    } 
+    
+    function undo() {
+      cm.undo();
+    } 
+    
+    function redo() {
+      cm.redo();
+    }    
   </script>
   
   <link rel="stylesheet" href="cm/lib/codemirror.css">

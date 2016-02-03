@@ -53,14 +53,18 @@ module Kernel
     o.each do |q| 
       JAVA::Android::Util::Log.i("jamruby", q.to_s)
     end
+    
+    o.length > 1 ? o : o[0]
   end  
   
   def puts *o
     print *o
+    o.length > 1 ? o : o[0]
   end
   
   def p *o
     o.each do |q| puts q.inspect end
+    o.length > 1 ? o : o[0]
   end
   
   def sleep i
@@ -95,6 +99,8 @@ module Kernel
   end
 end
 
+REQUIRED_LIBS = {}
+
 class Object
   alias :__jam_require__ :require
   
@@ -103,7 +109,7 @@ class Object
   # Else it will import a Java namespace under ::JAVA
   #
   # @param [String] path
-  def require path    
+  def require path      
     if File.exist?(path) and !File.directory?(path)
     elsif File.exist?(tmp = path+".rb")
       path = tmp
@@ -123,15 +129,29 @@ class Object
         end                
       end
     end   
+
+    if ["rb", "mrb"].index(q = path.split(".").last)    
     
-    q = path.split(".").last
+      path = File.expand_path(path)
+    
+      if REQUIRED_LIBS[path]
+        return false
+      end
+
+      REQUIRED_LIBS[path = File.expand_path(path)] = true
+    end
     
     if q == "rb"
       __eval__ "JAM_MAIN_HANDLE.loadScriptFull __mrb_context__, '#{path}'"
+      return true
     elsif q == "mrb"
-      JAM_MAIN_HANDLE.loadCompiledFull __mrb_context__, path
+      __eval__ "JAM_MAIN_HANDLE.loadCompiledFull __mrb_context__, '#{path}'"
+      return true
     else
       __jam_require__ path
     end
+  rescue => e
+    p e
+    raise e
   end
 end  
