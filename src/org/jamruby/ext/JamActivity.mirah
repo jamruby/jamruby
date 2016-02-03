@@ -177,6 +177,7 @@ class JamActivity < Activity
   
   def checkInstall:boolean
     if !File.new("#{@script_dir}").exists
+      File.new("#{@script_dir}").mkdirs    
       File.new("#{@script_dir}/scripts").mkdirs
     end
   
@@ -241,7 +242,8 @@ class JamActivity < Activity
     File.new("#{root}").mkdirs
     File.new("#{root}/mrblib").mkdirs  
     File.new("#{root}/mrblib/jamruby").mkdirs    
-    File.new("#{root}/lib").mkdirs   
+    File.new("#{root}/lib").mkdirs  
+    File.new("#{@script_dir}").mkdirs      
     File.new("#{@script_dir}/scripts").mkdirs  
       
     am = getAssets();
