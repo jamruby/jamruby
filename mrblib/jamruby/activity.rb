@@ -24,7 +24,6 @@ begin
     end
   
     class Activity < Org::Jamruby::Ext::JamActivity     
-      include ExposedMethods
       include NativeActivity
       
       def initialize

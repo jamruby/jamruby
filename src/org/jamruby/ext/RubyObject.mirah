@@ -101,18 +101,19 @@ class RubyObject
   end
 
   def send(name:String, ol:ObjectList):InvokeResult
-    va = Value[ol.size+2]
-    i = 1
+    va = Value[ol.size+3]
+    i = 2
     
-    va[0] = Util.toValue(mrb, name)
+    va[0] = Util.toValue(mrb, "send_with_casted_params")    
     va[1] = Util.toValue(mrb, ir = InvokeResult.new())
-    
+    va[2] = Util.toValue(mrb, name)
+        
     ol.each do |a|
       i+=1
       va[i] = Util.toValue(mrb, a)
     end
     
-    ir.setResult(MRuby.funcallArgv(mrb, ins, "send_with_result", ol.size+2, va))
+    ir.setResult(MRuby.funcallArgv(mrb, ins, "send_with_result", ol.size+3, va))
     
     return ir
   end

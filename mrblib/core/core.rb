@@ -90,6 +90,25 @@ class Object
     
     __is_a__ w
   end
+  
+  def send_with_casted_params mname, *o
+    o = o.map do |q|
+      if q.is_a?(JObject)
+        begin
+          next q.cast()
+        rescue => e
+          next q
+        end
+      end
+      
+      next q
+    end
+
+    send mname, *o
+  rescue => e
+    p e
+    raise e
+  end  
 end
 
 class Array

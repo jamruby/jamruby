@@ -17,18 +17,16 @@ class JamView < View
 
   def onDraw canvas
     ol = ObjectList.new
-    ol.addStr "on_draw"
     ol.addObj canvas
       
-    r.send "send_with_casted_params", ol
+    r.send "on_draw", ol
   end
   
   def onTouchEvent e
     ol = ObjectList.new
-    ol.addStr "on_touch_event"
     ol.addObj e
     
-    r.send "send_with_casted_params", ol
+    r.send "on_touch_event", ol
     true
   end
 end

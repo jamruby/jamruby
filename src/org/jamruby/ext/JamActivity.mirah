@@ -91,10 +91,9 @@ class JamActivity < Activity
     
     if _self_ != nil
       ol = ObjectList.create
-      ol.addStr "on_create"
       ol.addObj state
 
-      r = _self_.send "send_with_casted_params", ol
+      r = _self_.send "on_create", ol
     
       if r.error
         setContentView DisplayError.new(self, r.getErrorMessage, r.getErrorDetail, r.getErrorBacktrace)

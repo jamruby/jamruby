@@ -3,8 +3,6 @@ begin
   
   module JamRuby
     class View < Org::Jamruby::Ext::JamView
-      include ExposedMethods
-      
       def initialize context
         @native = Org::Jamruby::Ext::JamView.new(context, to_java).native
         extend JamRuby::NativeView
