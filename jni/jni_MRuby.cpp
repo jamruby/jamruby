@@ -726,8 +726,7 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1nilValue
   (JNIEnv *env, jclass clazz)
 {
 	mrb_value const &value = mrb_nil_value();
-	safe_jni::safe_local_ref<jobject> val(getEnv(), create_value(getEnv(), value));
-	return val.get();
+	return create_value(getEnv(), value);
 }
 
 /*

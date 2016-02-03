@@ -58,7 +58,9 @@ class Util
   end
   
   def self.toValue(mrb:State, obj:Object):Value
-    if obj.kind_of?(Integer)
+    if obj == nil
+      MRuby.nilValue
+    elsif obj.kind_of?(Integer)
       Value.new(Integer(obj).intValue)
     elsif obj.kind_of?(Double)
       Value.new(Double(obj).doubleValue)
@@ -70,8 +72,6 @@ class Util
       Value.new(Long(obj).longValue)             
     elsif obj.kind_of?(CharSequence)
       MRuby.strNew(mrb, String(obj))
-    elsif obj == nil
-      Value.new(false)
     else
       MRuby.jobjectMake(mrb, obj)
     end
