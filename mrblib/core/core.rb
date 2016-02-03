@@ -56,9 +56,23 @@ class JObject
     what.wrap self
   end
   
-  def cast class_name
-    cls = __jam_require__ class_name.split(".").join("/")
-    return JamRuby::NativeWrapper.as self, cls
+  def cast class_name = nil
+    if !class_name
+      p self
+      p self.to_s
+      n = cast("java.lang.Object").getClass.to_s.split(" ").pop
+      cst = cast(n)
+    else
+      cls = __jam_require__ class_name.split(".").join("/")
+      
+      if cls.respond_to?(:bridge)
+        return cls.bridge.wrap(self)
+      end
+      
+      return JamRuby::NativeWrapper.as self, cls
+    end
+  rescue => e
+    self
   end
 end 
 
@@ -222,8 +236,20 @@ end
 
 module JamRuby
   class Proxy
+    MAP = {}
+    
+    def self.for path
+      cls = MAP[path]
+      if !cls
+        cls = Class.new(JamRuby::Proxy)
+        cls.set_class_path path
+      end
+      
+      return cls
+    end
+    
     def self.set_class_path path
-      @class_path = path
+      MAP[@class_path = path] = self
     end
     
     def self.get_class_path
@@ -234,6 +260,18 @@ module JamRuby
       set &b
       
       @proxy=proxy(self.class.get_class_path) do |*o|
+        o = o.map do |q|
+          if q.is_a?(JObject)
+            begin
+              next q.cast()
+            rescue => e
+              next q
+            end
+          end
+          
+          next q
+        end
+        
         @b.call(*o) if @b
       end
     end

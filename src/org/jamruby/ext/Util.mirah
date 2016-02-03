@@ -19,28 +19,6 @@ import android.content.Context
 
 import org.jamruby.ext.MainDispatch
 
-class Parameter
-  def initialize obj:Object
-    @obj = obj
-    @name = String(nil)
-    if @obj != nil
-      @name = obj.getClass.getName
-    end
-  end
-  
-  def name
-    @name
-  end
-  
-  def object
-    @obj
-  end
-  
-  def isNull
-    @obj == nil
-  end
-end
-
 class Util
   def self.readFile(pathname:String)
 
@@ -92,6 +70,8 @@ class Util
       Value.new(Long(obj).longValue)             
     elsif obj.kind_of?(CharSequence)
       MRuby.strNew(mrb, String(obj))
+    elsif obj == nil
+      Value.new(false)
     else
       MRuby.jobjectMake(mrb, obj)
     end

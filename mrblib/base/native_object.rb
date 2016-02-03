@@ -57,6 +57,13 @@ module JamRuby
     end   
   
     def self.set_for t
+      cls = self
+      t.class_eval do
+        const_set :BRIDGE, cls
+        singleton_class.define_method "bridge" do
+          const_get(:BRIDGE)
+        end
+      end
       self.const_set :WRAP, t
     end
     
@@ -196,6 +203,7 @@ module JamRuby
     def self.arg_types sig
       types = []
       sig = sig[1].split(")")[0][1..-1]
+
       while sig != ""
         if c=["[", "L"].find do |q| sig[0..0] == q end
           types << t=NType.new
@@ -218,7 +226,7 @@ module JamRuby
           end
         end
       end
-      
+
       types
     rescue => e
       p e
@@ -259,12 +267,17 @@ module JamRuby
       
       # Create proxy
       if b
-        type = arg_type(sig, args.length)
+        type = arg_type(sig, arg_types(sig).length-2)
+
         if type.qualified
-          args << proxy(type.name.split("/").join("."), &b)
+          pc = JamRuby::Proxy.for(type.name.split("/").join("."))
+          pxy = pc.new(&b)
+          args << pxy.native
+        else
+          
         end
       end
-      
+
       args
     rescue => e
       p e

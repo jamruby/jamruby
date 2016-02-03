@@ -26,7 +26,6 @@ import org.jamruby.mruby.Value
 import org.jamruby.mruby.GC
 
 import Util
-import Parameter
 import RubyObject
 
 import org.jamruby.ext.MainHandle
@@ -93,10 +92,9 @@ class JamActivity < Activity
     if _self_ != nil
       ol = ObjectList.create
       ol.addStr "on_create"
-      ol.addObj Parameter.new(state)
-    
+      ol.addObj state
+
       r = _self_.send "send_with_casted_params", ol
-    
     
       if r.error
         setContentView DisplayError.new(self, r.getErrorMessage, r.getErrorDetail, r.getErrorBacktrace)
