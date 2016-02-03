@@ -66,6 +66,7 @@ class JamActivity < Activity
     super state
     
     @root = Environment.getExternalStorageDirectory.toString+"/jamruby/"+self.getClass.getPackage.getName    
+    @script_dir = "#{Environment.getExternalStorageDirectory.toString}/jamruby/scripts/#{self.getClass.getPackage.getName}"
     
     
     @didInstall = false;
@@ -175,6 +176,10 @@ class JamActivity < Activity
   end
   
   def checkInstall:boolean
+    if !File.new("#{@script_dir}").exists
+      File.new("#{@script_dir}/scripts").mkdirs
+    end
+  
     File.new(getFilesDir.toString+"/i").exists
   end
   
@@ -236,33 +241,39 @@ class JamActivity < Activity
     File.new("#{root}").mkdirs
     File.new("#{root}/mrblib").mkdirs  
     File.new("#{root}/mrblib/jamruby").mkdirs    
-    File.new("#{root}/lib").mkdirs     
+    File.new("#{root}/lib").mkdirs   
+    File.new("#{@script_dir}/scripts").mkdirs  
       
     am = getAssets();
     inputStream = am.open("main.rb");
     Util.createFileFromInputStream("#{root}/main.rb", inputStream);
     
-    copyAssets("mrblib")  
-    copyAssets("lib")        
+    copyAssets("mrblib", root)  
+    copyAssets("lib", root)  
+    copyAssets("scripts", @script_dir)          
     
     onInstall()
   end
   
-  def copyAssets(path:String):boolean
+  def getScriptsDir
+    @script_dir+"/scripts"
+  end
+  
+  def copyAssets(path:String, dest:String):boolean
     begin
       am = getAssets();
       list = getAssets().list(path);
       if (list.length > 0)
         # This is a folder
         list.each do |file|
-          if (!copyAssets(path + "/" + file))
+          if (!copyAssets(path + "/" + file, dest))
             return false;
           end
         end
       else
         Util.p "Copy: #{path}"
         inputStream = am.open(path);
-        Util.createFileFromInputStream("#{root}/#{path}", inputStream); 
+        Util.createFileFromInputStream("#{dest}/#{path}", inputStream); 
       end
     rescue => e
       return false;

@@ -25,7 +25,7 @@ class Main < JamRuby::Activity
     @vs.addView ll1 = Android::Widget::LinearLayout.new(self)
     ll1.setOrientation :vertical
     
-    @fc = JamRuby::FileChooserView.new(self, getBaseDir, :header => "Select an Activity file", :type => ["mrb", "rb"])
+    @fc = JamRuby::FileChooserView.new(self, getScriptsDir, :header => "Select an Activity file", :type => ["mrb", "rb"])
     @fc.on_select do |path|
       if @_mode == :run
         on_run path
