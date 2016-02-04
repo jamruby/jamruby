@@ -181,7 +181,7 @@ class JamActivity < Activity
       File.new("#{@script_dir}/scripts").mkdirs
     end
   
-    File.new(getFilesDir.toString+"/i").exists
+    File.new(getFilesDir.toString+"/i").exists || File.new(root).exists
   end
   
   def selfCall(fun:String):boolean
