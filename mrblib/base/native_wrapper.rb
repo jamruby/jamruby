@@ -2,8 +2,7 @@ module JamRuby
   module NativeWrapper
     def method_missing m,*o
       @classes.reverse.each do |cls|
-        if im = cls::SIGNATURES.find do |s| s[0] == m.to_s end
-          sig = im[1]
+        if sig = cls::SIGNATURES[m.to_s]
           begin
             if jim = jclass.get_method(m.to_s, sig)
               return jclass.call self, jim, *(o.map do |q| q.respond_to?(:native) ? q.native : q end)
@@ -17,13 +16,7 @@ module JamRuby
     end
     
     def self.override cls, m, sig
-      if osig = cls::SIGNATURES.find do |s|
-        s[0] == m
-      end
-        osig[1] = sig
-      else
-        cls::SIGNATURES << [m, sig]
-      end
+      cls::SIGNATURES[m] = sig
       
       cls.class_eval do
         define_method m do |*o|
@@ -37,14 +30,8 @@ module JamRuby
     end
     
     def self.static_override cls, m, sig
-      if osig = cls::STATIC_SIGNATURES.find do |s|
-        s[0] == m
-      end
-        osig[1] = sig
-      else
-        cls::STATIC_SIGNATURES << [m, sig]
-      end
-
+      cls::STATIC_SIGNATURES[m] = sig
+      
       n=cls.define_singleton_method m do |*o|
         if sm = (jclass=JAVA.find_class(cls::CLASS_PATH)).get_static_method(m, sig)
           return jclass.call_static sm, *(o.map do |q| q.respond_to?(:native) ? q.native : q end)

@@ -16,28 +16,98 @@ module JamRuby
   end
   
   class NativeObject
+    def self.has_sig? m
+      self::WRAP::SIGNATURES[m]
+    end
+    
+    def self.has_static_sig? m
+      self::WRAP::STATIC_SIGNATURES[m]
+    end    
+  
     def method_missing m, *o, &b
-      if self.class::WRAP::SIGNATURES.find do |s| s[0] == m.to_s end
-        self.class.add_method m.to_s, false
+      m = m.to_s
       
-        return send(m, *o, &b)      
+      bool = self.class.has_sig?(m) # true if matches java name
+    
+      rbstyle = false
+      nm = m
+      
+      if !bool and m[-1..-1] == "="
+        # setter
+      
+        nm = "set#{m[0..-2].split("_").map do |a| a.capitalize end.join}"
+        bool = self.class.has_sig?(nm)
+        rbstyle = true
+      elsif !bool
+        i = -1
+        nm = "#{m.split("_").map do |a| (i+=1) == 0 ? a : a.capitalize end.join}"
+        if !(bool = self.class.has_sig?(nm))
+          # getter
+          nm = "get#{m.split("_").map do |a| a.capitalize end.join}"
+          bool = self.class.has_sig?(nm)        
+        end
+        
+        rbstyle = true
+      end
+      
+      if bool
+        # define the java name
+        self.class.add_method nm.to_s, false
+      
+        # define the ruby styled name
+        self.class.define_method m do |*o, &b|
+          send(nm, *o, &b)
+        end if rbstyle
+      
+        return send(nm, *o, &b)
       end
       
       super
     end
     
     def self.method_missing m, *o, &b
-      if self::WRAP::STATIC_SIGNATURES.find do |s| s[0] == m.to_s end
-        add_method m.to_s, true
+      m = m.to_s
       
-        return send(m, *o, &b)      
+      bool = has_static_sig?(m) # true if matches java name
+    
+      rbstyle = false
+      nm = m
+      
+      if !bool and m[-1..-1] == "="
+        # setter
+      
+        nm = "set#{m[0..-2].split("_").map do |a| a.capitalize end.join}"
+        bool = has_static_sig?(nm)
+        rbstyle = true
+      elsif !bool
+        i = -1
+        nm = "#{m.split("_").map do |a| (i+=1) == 0 ? a : a.capitalize end.join}"
+        if !(bool = has_static_sig?(nm))
+          # getter
+          nm = "get#{m.split("_").map do |a| a.capitalize end.join}"
+          bool = has_static_sig?(nm)        
+        end
+        
+        rbstyle = true
+      end
+      
+      if bool
+        # define the java name
+        add_method nm.to_s, true
+      
+        # define the ruby styled name
+        singleton_class.define_method m do |*o, &b|
+          send(nm, *o, &b)
+        end if rbstyle
+      
+        return send(nm, *o, &b)
       end
       
       super
     end  
     
     def respond_to? m
-      super or self.class::WRAP::SIGNATURES.find do |s| s[0] == m.to_s end
+      super or self.class::WRAP::SIGNATURES[m.to_s]
     end 
   
     def self.java_class
@@ -136,11 +206,11 @@ module JamRuby
     end    
     
     def self.get_signature name, static=false
-      sig = (static ? self::WRAP::STATIC_SIGNATURES : self::WRAP::SIGNATURES).find do |s| s[0] == name.to_s end
+      sig = (static ? self::WRAP::STATIC_SIGNATURES : self::WRAP::SIGNATURES)[name.to_s]
+      
       if sig
-        
         @p ||= NativeWrapper.as(JAVA::Java::Util::Regex::Pattern.compile("\\Q)\\EL(.*?)\;$"), JAVA::Java::Util::Regex::Pattern)
-        m = NativeWrapper.as(@p.matcher(sig[1]), JAVA::Java::Util::Regex::Matcher);
+        m = NativeWrapper.as(@p.matcher(sig), JAVA::Java::Util::Regex::Matcher);
         if m.find
           path = m.group[2..-2]
           case path
@@ -198,7 +268,7 @@ module JamRuby
             res = native.send name, *o
           else
             c=native.jclass
-            m=c.get_method(name, sig[1])
+            m=c.get_method(name, sig)
             res = c.call(native, m, *o)
           end
         end
@@ -231,7 +301,7 @@ module JamRuby
     
     def self.arg_types sig
       types = []
-      sig = sig[1].split(")")[0][1..-1]
+      sig = sig.split(")")[0][1..-1]
 
       while sig != ""
         if c=["[", "L"].find do |q| sig[0..0] == q end
