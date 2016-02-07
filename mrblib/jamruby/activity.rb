@@ -3,31 +3,13 @@ begin
 
   module JamRuby
     module NativeActivity
-      def init act
-        path = act.getClass.getName.split(".").join("/")
-        cls = java.import(path) 
-        @native = act.native
-        m = Module.new
-        
-        m.module_eval do
-          cls::WRAP::SIGNATURES.each do |s|
-            unless act.respond_to?(:"#{s[0]}")
-              define_method s[0] do |*o|
-                cls.wrap(native).send s[0], *o
-              end
-            end
-          end
-        end
-        
-        extend m
-      end
     end
   
     class Activity < Org::Jamruby::Ext::JamActivity     
       include NativeActivity
       
       def initialize
-        init Org::Jamruby::Ext::JamActivity.wrap(JAM_ACTIVITY)
+        @native = JAM_ACTIVITY.cast
       end
       
       def self.new

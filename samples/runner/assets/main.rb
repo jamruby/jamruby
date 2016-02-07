@@ -1,3 +1,5 @@
+n = JAM_CONF[:no_inner]
+JAM_CONF[:no_inner] = true
 java.import "org/jamruby/runner/SpawnedActivity"
 java.import "org/jamruby/runner/SpawnedCompiledActivity"  
 java.import "android/webkit/WebView"
@@ -6,6 +8,8 @@ java.import "android/widget/Button"
 
 require "jamruby/file_chooser"
 require "jamruby/javascript_interface"
+
+JAM_CONF[:no_inner] = n
 
 class Main < JamRuby::Activity
   def is_compiled? path

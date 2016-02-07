@@ -1,11 +1,14 @@
 begin  
+n = JAM_CONF[:no_inner]
+JAM_CONF[:no_inner] = true
   java.import "android/widget/ListView"
   java.import "android/widget/TextView"
-  java.import "android/widget/LinearLayout"  
-  java.import "android/text/TextUtils$TruncateAt"
+  java.import "android/widget/LinearLayout"
+  java.import "android/widget/LinearLayout$LayoutParams"  
+  java.import "android/text/TextUtils$TruncateAt", true
   
   require "jamruby/array_adapter"  
-      
+JAM_CONF[:no_inner] = n          
   module JamRuby  
     class FileChooserView < Android::Widget::LinearLayout
       def initialize ctx, path = "./", *argv                

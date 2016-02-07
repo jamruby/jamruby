@@ -2,6 +2,15 @@ GC.generational_mode = false
 
 $: = []
 
+def raise *o
+  p o
+  super
+end
+
+def include mod
+  self.class.include mod
+end
+
 class Module
   def implement mod
     class_eval do
@@ -58,8 +67,6 @@ class JObject
   
   def cast class_name = nil
     if !class_name
-      p self
-      p self.to_s
       n = cast("java.lang.Object").getClass.to_s.split(" ").pop
       cst = cast(n)
     else
@@ -108,7 +115,7 @@ class Object
   rescue => e
     p e
     raise e
-  end  
+  end 
 end
 
 class Array

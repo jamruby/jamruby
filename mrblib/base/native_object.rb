@@ -7,7 +7,7 @@ module JamRuby
     
     def self.get_enum c, e
       ea = NativeWrapper.as(JAVA::Org::Jamruby::Ext::Util.enums(c), JAVA::Org::Jamruby::Ext::ObjectList)
-      ea.get( ea.to_s[1..-2].split(",").join.split(" ").index(e.to_s.upcase))
+      ea.get( ea.to_s[1..-2].gsub(",", '').split(" ").index(e.to_s.upcase))
     end  
     
     def self.classForName(path)
@@ -16,8 +16,32 @@ module JamRuby
   end
   
   class NativeObject
+    def method_missing m, *o, &b
+      if self.class::WRAP::SIGNATURES.find do |s| s[0] == m.to_s end
+        self.class.add_method m.to_s, false
+      
+        return send(m, *o, &b)      
+      end
+      
+      super
+    end
+    
+    def self.method_missing m, *o, &b
+      if self::WRAP::STATIC_SIGNATURES.find do |s| s[0] == m.to_s end
+        add_method m.to_s, true
+      
+        return send(m, *o, &b)      
+      end
+      
+      super
+    end  
+    
+    def respond_to? m
+      super or self.class::WRAP::SIGNATURES.find do |s| s[0] == m.to_s end
+    end 
+  
     def self.java_class
-      NativeClassHelper.classForName self::WRAP::CLASS_PATH.split("/").join(".")
+      NativeClassHelper.classForName self::WRAP::CLASS_PATH.gsub("/", ".")
     rescue => e
       p e
     end 
@@ -28,7 +52,7 @@ module JamRuby
   
     # Look up Fields
     def self.const_missing c
-      pth = self::WRAP::CLASS_PATH.split("/").join(".")
+      pth = self::WRAP::CLASS_PATH.gsub("/", ".")
       cls = NativeClassHelper.classForName pth
      
       if NativeClassHelper.is_enum? cls
@@ -153,7 +177,12 @@ module JamRuby
         unless this.sigs[static ? :static : :instance][name]
           a = []
           a.push *this.get_signature(name, static)
+
+          n = JAM_CONF[:no_inner]
+          JAM_CONF[:no_inner] = true
           a << java.import(a[1]) if a[1]  
+          JAM_CONF[:no_inner] = n
+
           this.sigs[static ? :static : :instance][name] = a
         end
 
@@ -252,7 +281,7 @@ module JamRuby
             
             type = arg_type(sig, i)
             
-            if type.qualified and NativeClassHelper.is_enum?(NativeClassHelper.classForName(type.name.split("/").join(".")))
+            if type.qualified and NativeClassHelper.is_enum?(NativeClassHelper.classForName(type.name.gsub("/", ".")))
               java.import type.name
               iface = java.import type.name, true
               next iface.const_get(:"#{q.to_s.upcase}")
@@ -270,7 +299,7 @@ module JamRuby
         type = arg_type(sig, arg_types(sig).length-2)
 
         if type.qualified
-          pc = JamRuby::Proxy.for(type.name.split("/").join("."))
+          pc = JamRuby::Proxy.for(type.name.gsub("/", "."))
           pxy = pc.new(&b)
           args << pxy.native
         else

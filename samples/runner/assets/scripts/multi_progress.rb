@@ -2,6 +2,7 @@ java.import "android/widget/Button"
 java.import "android/widget/LinearLayout"
 java.import "android/widget/ProgressBar"  
 java.import "android/widget/ScrollView" 
+java.import "android/R" 
 
 class Main < JamRuby::Activity
   def update id, pct

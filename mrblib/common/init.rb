@@ -1,6 +1,6 @@
-java.import "org/jamruby/ext/ObjectList"    
-java.import "org/jamruby/ext/Util"  
-java.import "org/jamruby/ext/JamThread"
+__eval__ 'java.import "org/jamruby/ext/ObjectList";'+    
+'java.import "org/jamruby/ext/Util";'+  
+'java.import "org/jamruby/ext/JamThread"'
 
 def JAM_MAIN_HANDLE.loadScriptFull mrb, path
   im = jclass.get_method "loadScriptFull", "(JLjava/lang/String;)Lorg/jamruby/mruby/Value;"

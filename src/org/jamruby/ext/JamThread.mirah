@@ -99,8 +99,7 @@ end
 
 class Runner < SubHandle
   implements Runnable
-  def initialize t:JamThread, main:MainHandle, ol:ObjectList, proc:RubyObject
-    @thread = t
+  def initialize  main:MainHandle, ol:ObjectList, proc:RubyObject
     super main, ol, proc
   end
   
@@ -114,7 +113,7 @@ end
 
 class JamThread < Thread
   def initialize main:MainHandle, argv:ObjectList, proc:RubyObject
-    super Runner.new(self, main, argv, proc)
+    super Runner.new(main, argv, proc)
   end
 end
 

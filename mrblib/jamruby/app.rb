@@ -1,7 +1,9 @@
+n = JAM_CONF[:no_inner]
+JAM_CONF[:no_inner] = true
 java.import "android/widget/Toast"
-java.import "android/R"
 
 require "jamruby/intent"
 require "jamruby/activity"
+JAM_CONF[:no_inner]=n
 
 
