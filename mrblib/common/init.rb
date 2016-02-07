@@ -1,15 +1,14 @@
-__eval__ 'java.import "org/jamruby/ext/ObjectList";'+    
-'java.import "org/jamruby/ext/Util";'+  
+__eval__ 'java.import "org/jamruby/ext/ObjectList";'+     
 'java.import "org/jamruby/ext/JamThread"'
 
 def JAM_MAIN_HANDLE.loadScriptFull mrb, path
-  im = jclass.get_method "loadScriptFull", "(JLjava/lang/String;)Lorg/jamruby/mruby/Value;"
-  jclass.call self, im, mrb, path
+  @ls ||= jclass.get_method "loadScriptFull", "(JLjava/lang/String;)Lorg/jamruby/mruby/Value;"
+  jclass.call self, @ls, mrb, path
 end
 
 def JAM_MAIN_HANDLE.loadCompiledFull mrb, path
-  im = jclass.get_method "loadCompiledFull", "(JLjava/lang/String;)Lorg/jamruby/mruby/Value;"
-  jclass.call self, im, mrb, path
+  @lc ||= jclass.get_method "loadCompiledFull", "(JLjava/lang/String;)Lorg/jamruby/mruby/Value;"
+  jclass.call self, @lc, mrb, path
 end
 
 class Org::Jamruby::Ext::ObjectList

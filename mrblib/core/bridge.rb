@@ -28,9 +28,12 @@ module JamRuby
       a.each do |b|
         c=b[0..0].capitalize+b[1..-1]
         if !t.const_defined? c.to_sym
-          
-          __eval__ "require '#{path}'"
-          
+          if respond_to?(:"__jam_require__")
+            __eval__ "__jam_require__ '#{path}'"
+          else
+            __eval__ "require '#{path}'"
+          end
+                  
           if q=JamRuby::IMPORT_OVERLOADS[path]
             q.each do |z|
               z.call
