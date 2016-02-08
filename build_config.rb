@@ -13,6 +13,7 @@ MRuby::Build.new do |conf|
   conf.gem 'mrbgems/mruby-print'
   conf.gem 'mrbgems/mruby-compiler'
   conf.gem 'mrbgems/mruby-string-ext'  
+  conf.gem :github=>"mattn/mruby-base64"   
   conf.gem :github=>"iij/mruby-iijson"  
   conf.gem :github=>"iij/mruby-io" 
   conf.gem :github=>"iij/mruby-dir"  
@@ -34,6 +35,7 @@ MRuby::CrossBuild.new('android-armeabi') do |conf|
   conf.gem 'mrbgems/mruby-print'
   conf.gem 'mrbgems/mruby-compiler'
   conf.gem 'mrbgems/mruby-string-ext'  
+  conf.gem :github=>"mattn/mruby-base64"   
   conf.gem :github=>"iij/mruby-iijson"  
   conf.gem :github=>"iij/mruby-io" 
   conf.gem :github=>"iij/mruby-dir"  
@@ -55,6 +57,7 @@ MRuby::CrossBuild.new('android-armeabi-v7a') do |conf|
   conf.gem 'mrbgems/mruby-print'
   conf.gem 'mrbgems/mruby-compiler'  
   conf.gem 'mrbgems/mruby-string-ext'  
+  conf.gem :github=>"mattn/mruby-base64"   
   conf.gem :github=>"iij/mruby-iijson"  
   conf.gem :github=>"iij/mruby-io" 
   conf.gem :github=>"iij/mruby-dir"
@@ -65,7 +68,7 @@ end
 
 MRuby::CrossBuild.new('android-x86') do |conf|
   toolchain :android, :arch=>:x86
-  conf.cc.flags << '-DHAVE_PTHREADS'
+  conf.cc.flags << '-DHAVE_PTHREADS -O3'
 
   # mrbc settings
   conf.mrbc do |mrbc|
@@ -75,6 +78,7 @@ MRuby::CrossBuild.new('android-x86') do |conf|
   conf.gem 'mrbgems/mruby-print'
   conf.gem 'mrbgems/mruby-compiler'
   conf.gem 'mrbgems/mruby-string-ext'  
+  conf.gem :github=>"mattn/mruby-base64"  
   conf.gem :github=>"iij/mruby-iijson"
   conf.gem :github=>"iij/mruby-io" 
   conf.gem :github=>"iij/mruby-dir"

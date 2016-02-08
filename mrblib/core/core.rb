@@ -99,17 +99,7 @@ class Object
   end
   
   def send_with_casted_params mname, *o
-    o = o.map do |q|
-      if q.is_a?(JObject)
-        begin
-          next q.cast()
-        rescue => e
-          next q
-        end
-      end
-      
-      next q
-    end
+    o = JamRuby.cast_params *o
 
     send mname, *o
   rescue => e
@@ -261,14 +251,51 @@ class Array
 end
 
 module JamRuby
+  def self.cast_params *o
+    o.map do |q|
+      if q.is_a?(JObject)
+        begin
+          if JAVA::Org::Jamruby::Ext::NativeArray.isArray(q)
+            next JamRuby::NativeArray.new(q)
+          end
+        rescue => e
+        end
+        
+        begin
+          next q.cast()
+        rescue => e
+          next q
+        end
+      end
+
+      next q
+    end
+  end
+
   class Proxy
     MAP = {}
     
-    def self.for path
-      cls = MAP[path]
+    def self.for what
+      cp = nil
+    
+      if what.is_a? Class
+        if what.ancestors.index(NativeObject)
+          cp = what.getName
+        elsif what.const_defined?(:CLASS_PATH)
+          cp = what::CLASS_PATH
+        else
+          raise ArgumentError.new("Cannot get java class name from: #{what}")
+        end
+      elsif what.is_a?(String)
+        cp = what
+      end
+      
+      cp = cp.gsub("/", '.')    
+    
+      cls = MAP[cp]
       if !cls
         cls = Class.new(JamRuby::Proxy)
-        cls.set_class_path path
+        cls.set_class_path cp
       end
       
       return cls
@@ -282,22 +309,12 @@ module JamRuby
       @class_path
     end
     
-    def initialize &b
+    def initialize swallow_method_name = true, &b
       set &b
       
       @proxy=proxy(self.class.get_class_path) do |*o|
-        o = o.map do |q|
-          if q.is_a?(JObject)
-            begin
-              next q.cast()
-            rescue => e
-              next q
-            end
-          end
-          
-          next q
-        end
-        
+        o.shift if swallow_method_name
+        o = JamRuby.cast_params *o
         @b.call(*o) if @b
       end
     end
@@ -317,5 +334,41 @@ module JamRuby
   
   class OnClickListener < Proxy
     set_class_path "android.view.View$OnClickListener"
+  end
+  
+  class Delegate < Proxy
+    def native
+      @proxy
+    end
+    
+    def initialize
+      super false do |mname, *o|
+        send mname, *o
+      end
+    end
+    
+    def self.of what
+      cp = nil
+    
+      if what.is_a? Class
+        if what.ancestors.index(NativeObject)
+          cp = what.getName
+        elsif what.const_defined?(:CLASS_PATH)
+          cp = what::CLASS_PATH
+        else
+          raise ArgumentError.new("Cannot get java class name from: #{what}")
+        end
+      elsif what.is_a?(String)
+        cp = what
+      end
+      
+      cp = cp.gsub("/", '.')
+      cls = Class.new(self)
+      cls.set_class_path cp
+      cls.singleton_class.define_method :get_class_path do
+        cp
+      end 
+      return cls
+    end
   end
 end

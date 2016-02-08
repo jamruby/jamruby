@@ -62,6 +62,10 @@ end
 class JamActivity < Activity
   implements MainDispatch
   
+  def getExternalStorageDirectory
+    Environment.getExternalStorageDirectory.toString
+  end
+  
   def onCreate state 
     super state
     

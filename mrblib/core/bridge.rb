@@ -63,17 +63,17 @@ module JamRuby
         
         cls.set_for t
         
-       # t::SIGNATURES.each do |o|
-       #   cls.add_method o[0]
-       # end
+        t::SIGNATURES.each do |o|
+          cls.add_method o[0]
+        end
         
-       # t::STATIC_SIGNATURES.each do |o|
-       #   cls.add_method(o[0], true) unless o[0] == "new"
-       # end
+       t::STATIC_SIGNATURES.each do |o|
+          cls.add_method(o[0], true) unless o[0] == "new"
+        end
         unless JAM_CONF[:no_inner]
-        get_inner_classes(path).each do |ic|
-          java.__import__(z=ic.to_s, z.index(path))
-        end   
+          get_inner_classes(path).each do |ic|
+            java.__import__(z=ic.to_s, z.index(path))
+          end   
         end     
         
         return cls 

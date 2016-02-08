@@ -16,6 +16,15 @@ module JamRuby
   end
   
   class NativeObject
+    def self.proxy &b
+      b = b ? b : Proc.new do end
+      Proxy.for(self).new &b
+    end
+    
+    def self.delegate
+      Delegate.of self
+    end  
+  
     def self.has_sig? m
       self::WRAP::SIGNATURES[m]
     end
@@ -119,6 +128,14 @@ module JamRuby
     def self.native
       java_class
     end   
+    
+    def self.get_name
+      native.to_s.split(" ").pop    
+    end
+    
+    def self.getName
+      get_name
+    end
   
     # Look up Fields
     def self.const_missing c
@@ -181,11 +198,11 @@ module JamRuby
     
     def initialize obj
       @native = obj 
-      extend JamRuby::NativeView if obj.respond_to?(:setOnClickListener)
     end
     
     def native
       q = @native
+      
       while q.respond_to?(:native)
         q = q.native
       end
@@ -352,13 +369,24 @@ module JamRuby
             type = arg_type(sig, i)
             
             if type.qualified and NativeClassHelper.is_enum?(NativeClassHelper.classForName(type.name.gsub("/", ".")))
-              java.import type.name
               iface = java.import type.name, true
               next iface.const_get(:"#{q.to_s.upcase}")
             end
             
             next q
           end
+        elsif q.is_a?(Proc)
+          next q unless sig
+            
+          type = arg_type(sig, i)  
+          
+          if type.qualified
+            pc = JamRuby::Proxy.for(type.name.gsub("/", "."))
+            pxy = pc.new(&b)
+            next pxy.native
+          else
+            raise ArgumentError.new("Cannot resolve class path for arg #{i}")
+          end                
         else
           q
         end

@@ -26,6 +26,6 @@ task :libs do
   sh "../mruby/build/host/bin/mrbc -g -o assets/mrblib/jamruby/file_chooser.mrb mrblib/jamruby/file_chooser.rb" 
   sh "../mruby/build/host/bin/mrbc -g -o assets/mrblib/jamruby/javascript_interface.mrb mrblib/jamruby/javascript_interface.rb"         
   sh "cd mrblib/core && ../../../mruby/build/host/bin/mrbc -g -o ../../assets/mrblib/core.mrb core.rb jamruby.rb bridge.rb kernel.rb"
-  sh "cd mrblib/base && ../../../mruby/build/host/bin/mrbc -g -o ../../assets/mrblib/base.mrb native_list.rb native_view.rb native_object.rb native_wrapper.rb"
+  sh "cd mrblib/base && ../../../mruby/build/host/bin/mrbc -g -o ../../assets/mrblib/base.mrb native_list.rb native_view.rb native_object.rb native_wrapper.rb native_array.rb"
   sh "cd mrblib/common && ../../../mruby/build/host/bin/mrbc -g -o ../../assets/mrblib/common.mrb init.rb"
 end

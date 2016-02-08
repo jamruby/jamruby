@@ -43,6 +43,7 @@ class ProcProxyInvocationHander
   def invoke(proxy:Object, method:Method, args:Object[]):Object
     ins = self
     a=ObjectList.create
+    a.addStr method.getName
   
     args.each do |o| 
       a.addObj o
