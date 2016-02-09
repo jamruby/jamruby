@@ -18,7 +18,8 @@ inline static RString *to_ptr(jlong str) {
 JNIEXPORT jstring JNICALL Java_org_jamruby_mruby_RString_n_1getPtr
   (JNIEnv *env, jclass clazz, jlong str)
 {
-	safe_jni::safe_local_ref<jstring> jstr(env, env->NewStringUTF(to_ptr(str)->ptr));
-	return jstr.get();
+	safe_jni::safe_local_ref<jstring> jstr(getEnv(), getEnv()->NewStringUTF(RSTR_PTR(to_ptr(str))));
+    jstring g = reinterpret_cast<jstring>(getEnv()->NewGlobalRef(jstr.get()));
+	return g;
 }
 

@@ -12,7 +12,7 @@ jamruby_context::map_type jamruby_context::inner_map;
 void jamruby_context::destruct_class::operator() (jamruby_context::class_map_t::value_type val)
 {
 	if (val.second) {
-		env_->DeleteGlobalRef(val.second->jcls);
+		getEnv()->DeleteGlobalRef(val.second->jcls);
 		val.second->jcls = NULL;
 		delete val.second->class_methods;
 		val.second->class_methods = NULL;
@@ -25,7 +25,7 @@ void jamruby_context::destruct_class::operator() (jamruby_context::class_map_t::
 
 jamruby_context::~jamruby_context()
 {
-	std::for_each(classes.begin(), classes.end(), destruct_class(env_));
+	std::for_each(classes.begin(), classes.end(), destruct_class(getEnv()));
 	classes.clear();
 }
 
@@ -50,7 +50,7 @@ bool jamruby_context::register_method_signature(bool is_class_method, struct RCl
 		}
 	}
 
-	mrb_sym const sym = mrb_intern(mrb_, name);
+	mrb_sym const sym = mrb_intern_cstr(mrb_, name);
 	signature_map_t::iterator sig_it = sig_map->find(sym);
 	if (sig_it == sig_map->end()) {
 		signatures_t signatures;
@@ -73,7 +73,7 @@ void jamruby_context::unregister_method_signatures(bool is_class_method, struct 
 	if (NULL == sig_map) {
 		return;
 	}
-	mrb_sym const sym = mrb_intern(mrb_, name);
+	mrb_sym const sym = mrb_intern_cstr(mrb_, name);
 	signature_map_t::iterator sig_it = sig_map->find(sym);
 	if (sig_it == sig_map->end()) {
 		return;
@@ -97,7 +97,7 @@ jamruby_context::signatures_t jamruby_context::find_method_signatures(bool is_cl
 	if (NULL == sig_map) {
 		return signatures_t();
 	}
-	mrb_sym const sym = mrb_intern(mrb_, name);
+	mrb_sym const sym = mrb_intern_cstr(mrb_, name);
 	signature_map_t::const_iterator sig_it = sig_map->find(sym);
 	if (sig_it == sig_map->end()) {
 		return signatures_t();

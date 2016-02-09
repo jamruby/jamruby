@@ -14,7 +14,32 @@ import org.jamruby.io.FileDescriptorHelper;
 
 
 public class MRuby {
-	public static int loadIrep(State state, File f) throws FileNotFoundException {
+	public static Value threadInit(long parent, Value argv, Value proc, long child) {
+		return n_threadInit(parent, argv, proc, child);
+	}
+  
+	public static Value transferProc(long parent, Value proc, long child) {
+		return n_transferProc(parent, proc, child);
+	}     
+  
+  
+	public static Value loadString(State state, String code) {
+		return n_loadString(state.nativeObject(), code);
+	}
+  
+	public static Value loadIrep(State state, String pth) throws FileNotFoundException {
+		return n_loadIrep(state.nativeObject(), pth);
+	}
+  
+	public static Value loadString(long state, String code) {
+		return n_loadString(state, code);
+	}
+  
+	public static Value loadIrep(long state, String pth) throws FileNotFoundException {
+		return n_loadIrep(state, pth);
+	}     
+  
+	public static Value loadIrep(State state, File f) throws FileNotFoundException {
 		return n_loadIrep(state.nativeObject(), f.getAbsolutePath());
 	}
 	
@@ -33,6 +58,10 @@ public class MRuby {
 	public static Value arrayNew(State state) {
 		return n_arrayNew(state.nativeObject());
 	}
+  
+	public static Value nilValue() {
+		return n_nilValue();
+	}  
 	
 	public static void arrayPush(State state, Value array, Value elem) {
 		n_arrayPush(state.nativeObject(), array, elem);
@@ -77,6 +106,10 @@ public class MRuby {
 	public static void defineConst(State state, RClass m, String name, Value value) {
 		n_defineConst(state.nativeObject(), m.nativeObject(), name, value);
 	}
+  
+	public static void defineConst(long state, RClass m, String name, Value value) {
+		n_defineConst(state, m.nativeObject(), name, value);
+	}  
 	
 	public static Value instanceNew(State state, Value cv) {
 		return n_instanceNew(state.nativeObject(), cv);
@@ -101,6 +134,10 @@ public class MRuby {
 	public static RClass classGet(State state, String name) {
 		return new RClass(n_classGet(state.nativeObject(), name));
 	}
+  
+	public static RClass classGet(long state, String name) {
+		return new RClass(n_classGet(state, name));
+	}  
 	
 	public static RClass classObjGet(State state, String name) {
 		return new RClass(n_classObjGet(state.nativeObject(), name));
@@ -142,6 +179,22 @@ public class MRuby {
 		return n_funcallWithBlock(state.nativeObject(), self, name, argc, argv, blk);
 	}
 	
+	public static Value funcallArgv(State state, Value self, String name, int argc, Value[] argv) {
+		return n_funcallArgv(state.nativeObject(), self, name, argc, argv);
+	}  
+  
+	public static Value funcallArgv(long state, Value self, String name, int argc, Value[] argv) {
+		return n_funcallArgv(state, self, name, argc, argv);
+	}   
+  
+  public static Value jobjectMake(State state, Object obj) {
+    return n_jobjectMake(state.nativeObject(), obj);
+  }
+  
+  public static Value jobjectMake(long state, Object obj) {
+    return n_jobjectMake(state, obj);
+  }  
+  
 	public static Symbol intern(State state, String name) {
 		return new Symbol(n_intern(state.nativeObject(), name));
 	}
@@ -178,6 +231,10 @@ public class MRuby {
 		return n_strNew(state.nativeObject(), str);
 	}
 	
+	public static Value strNew(long state, String str) {
+		return n_strNew(state, str);
+	}  
+  
 	public static State open() {
 		State s = new State(n_open());
 		if (s.available()) {
@@ -352,12 +409,16 @@ public class MRuby {
 	private static native int n_redirect_stderr() throws IOException;
 	private static native int n_redirect_stdin() throws IOException;
 	
+  private static native Value n_threadInit(long parent_mrb, Value argv, Value proc, long child_mrb);  
+  private static native Value n_transferProc(long parent_mrb, Value proc, long child_mrb);  
+    
 	// Non-categorized methods
-	private static native int n_loadIrep(long mrb, String path) throws FileNotFoundException;
+	private static native Value n_loadIrep(long mrb, String path) throws FileNotFoundException;
 	private static native long n_parseString(long mrb, String command);
 	private static native long n_parseFile(long mrb, String path) throws FileNotFoundException;
 	private static native int n_generateCode(long mrb, long node);
 	private static native Value n_arrayNew(long mrb);
+  private static native Value n_nilValue();
 	private static native void n_arrayPush(long mrb, Value array, Value elem);
 	private static native long n_procNew(long mrb, long irep);
 	
@@ -386,6 +447,7 @@ public class MRuby {
 	
 	private static native Value n_funcall(long mrb, Value self, String name, int argc, Value...argv);
 	private static native Value n_funcallWithBlock(long mrb, Value self, String name, int argc, Value[] argv, Value blk);
+	private static native Value n_funcallArgv(long mrb, Value self, String name, int argc, Value[] argv);  
 	private static native long n_intern(long mrb, String name);
 	private static native String n_sym2name(long mrb, long sym);
 	private static native Value n_strFormat(long mrb, int argc, Value[] argv, Value fmt);
@@ -428,7 +490,7 @@ public class MRuby {
 	private static native void n_raise(long mrb, long c, String message);
 	private static native void n_warn(long mrb, String message);
 	private static native void n_bug(long mrb, String message);
-	
+	private static native Value n_jobjectMake(long mrb, Object obj);
 	private static native Value n_yield(long mrb, Value v, Value blk);
 	private static native Value n_yieldArgv(long mrb, Value b, int argc, Value[] argv);
 	private static native Value n_classNewInstance(long mrb, int argc, Value[] argv, long c);
@@ -437,7 +499,7 @@ public class MRuby {
 	private static native void n_defineAlias(long mrb, long c, String name1, String name2);
 	private static native String n_className(long mrb, long c);
 	private static native void n_defineGlobalConst(long mrb, String name, Value value);
-	
+	private static native Value n_loadString(long ptr, String code);	
 	private static native void n_init_JNI_module(long mrb, long threadId);
 	static native void n_cleanup_JNI_module(long mrb, long threadId);
 	

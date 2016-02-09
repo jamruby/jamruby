@@ -7,6 +7,24 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/*
+ * Class:     org_jamruby_mruby_MRuby
+ * Method:    n_transferProc
+ * Signature: (JLorg/jamruby/mruby/Value;J)Lorg/jamruby/mruby/Value;
+ */
+JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1transferProc
+  (JNIEnv *env, jclass, jlong parent, jobject proc, jlong child);
+
+
+/*
+ * Class:     org_jamruby_mruby_MRuby
+ * Method:    n_threadInit
+ * Signature: (JLorg/jamruby/mruby/Value;Lorg/jamruby/mruby/Value;J)Lorg/jamruby/mruby/Value;
+ */
+JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1threadInit
+  (JNIEnv *env, jclass, jlong parent, jobject argv, jobject proc, jlong child);
+
 /*
  * Class:     org_jamruby_mruby_MRuby
  * Method:    n_redirect_stdout
@@ -34,9 +52,9 @@ JNIEXPORT jint JNICALL Java_org_jamruby_mruby_MRuby_n_1redirect_1stdin
 /*
  * Class:     org_jamruby_mruby_MRuby
  * Method:    n_loadIrep
- * Signature: (JLjava/lang/String;)I
+ * Signature: (JLjava/lang/String;)Lorg/jamruby/mruby/Value;
  */
-JNIEXPORT jint JNICALL Java_org_jamruby_mruby_MRuby_n_1loadIrep
+JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1loadIrep
   (JNIEnv *, jclass, jlong, jstring);
 
 /*
@@ -229,7 +247,7 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1checkToInteger
  * Signature: (JJ)I
  */
 JNIEXPORT jint JNICALL Java_org_jamruby_mruby_MRuby_n_1objRespondTo
-  (JNIEnv *, jclass, jlong, jlong);
+  (JNIEnv *, jclass, jlong, jlong, jlong);
 
 /*
  * Class:     org_jamruby_mruby_MRuby
@@ -254,6 +272,14 @@ JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_MRuby_n_1defineModuleUnder
  */
 JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1funcall
   (JNIEnv *, jclass, jlong, jobject, jstring, jint, jobjectArray);
+
+/*
+ * Class:     org_jamruby_mruby_MRuby
+ * Method:    n_funcallArgv
+ * Signature: (JLorg/jamruby/mruby/Value;Ljava/lang/String;I[Lorg/jamruby/mruby/Value;)Lorg/jamruby/mruby/Value;
+ */
+JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1funcallArgv
+  (JNIEnv *env, jclass, jlong mrb, jobject self, jstring name, jint argc, jobjectArray argv);
 
 /*
  * Class:     org_jamruby_mruby_MRuby
@@ -318,6 +344,14 @@ JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_MRuby_n_1objAlloc
  */
 JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1free
   (JNIEnv *, jclass, jlong, jlong);
+
+/*
+ * Class:     org_jamruby_mruby_MRuby
+ * Method:    n_nilValue
+ * Signature: ()Lorg/jamruby/mruby/Value;
+ */
+JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1nilValue
+  (JNIEnv *env, jclass clazz);
 
 /*
  * Class:     org_jamruby_mruby_MRuby
@@ -591,6 +625,21 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1init_1JNI_1module
 JNIEXPORT void JNICALL Java_org_jamruby_mruby_MRuby_n_1cleanup_1JNI_1module
   (JNIEnv *, jclass, jlong, jlong);
 
+/*
+ * Class:     org_jamruby_mruby_MRuby
+ * Method:    n_jobjectMake
+ * Signature: (JLjava/lang/Object;)Lorg/jamruby/mruby/Value;
+ */
+JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1jobjectMake
+  (JNIEnv *env, jclass clazz, jlong mrb, jobject obj);
+
+/*
+ * Class:     org_jamruby_mruby_MRuby
+ * Method:    n_loadString
+ * Signature: (JLjava/lang/String;)Lorg/jamruby/mruby/Value;
+ */
+JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_MRuby_n_1loadString
+  (JNIEnv *env, jclass clazz, jlong mrb, jstring code);
 #ifdef __cplusplus
 }
 #endif

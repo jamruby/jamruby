@@ -30,7 +30,7 @@ static void jcls_free(mrb_state *mrb, void *ptr)
 {
 	if (NULL != ptr) {
 		jclass_data *p = static_cast<jclass_data*>(ptr);
-		p->env->DeleteGlobalRef(p->gref_jclass);
+		getEnv()->DeleteGlobalRef(p->gref_jclass);
 		p->env = NULL;
 		p->gref_jclass = NULL;
 	}
@@ -41,7 +41,7 @@ static struct mrb_data_type jcls_type = { CLASS_NAME, jcls_free };
 
 mrb_value jcls_make(mrb_state *mrb, JNIEnv *env, jclass cls)
 {
-	safe_jni::clear_exception ce(env);
+	safe_jni::clear_exception ce(getEnv());
 	RClass *c = mrb_class_get(mrb, CLASS_NAME);
 	if (NULL == c) {
 		return mrb_nil_value();
@@ -50,19 +50,19 @@ mrb_value jcls_make(mrb_state *mrb, JNIEnv *env, jclass cls)
 	if (NULL == ptr) {
 		return mrb_nil_value();
 	}
-	ptr->env = env;
-	ptr->gref_jclass = static_cast<jclass>(env->NewGlobalRef(cls));
+	ptr->env = getEnv();
+	ptr->gref_jclass = static_cast<jclass>(getEnv()->NewGlobalRef(cls));
 	return mrb_obj_value(Data_Wrap_Struct(mrb, c, &jcls_type, ptr));
 }
 
 mrb_value jcls_make(mrb_state *mrb, JNIEnv *env, char const * const name)
 {
-	safe_jni::clear_exception ce(env);
-	safe_jni::safe_local_ref<jclass> jcls(env, env->FindClass(name));
+	safe_jni::clear_exception ce(getEnv());
+	safe_jni::safe_local_ref<jclass> jcls(getEnv(), findClass(name));
 	if (!jcls) {
 		return mrb_nil_value();
 	}
-	return jcls_make(mrb, env, jcls.get());
+	return jcls_make(mrb,getEnv(), jcls.get());
 }
 
 mrb_value jcls_call_static(mrb_state *mrb, mrb_value self)
@@ -79,7 +79,7 @@ mrb_value jcls_call_static(mrb_state *mrb, mrb_value self)
 	}
 
 	jclass_data *data = static_cast<jclass_data*>(mrb_get_datatype(mrb, self, &jcls_type));
-	JNIEnv *env = data->env;
+	// JNIEnv *env = getEnv();
 
 	jmethodID jmid = jmethod_get_jmethodID(mrb, jmthd);
 	if (NULL == jmid) {
@@ -104,12 +104,26 @@ mrb_value jcls_call_static(mrb_state *mrb, mrb_value self)
 	using namespace org::jamruby;
 
 	for (int i = 0; i < rb_argc; ++i) {
-		convert_mrb_value_to_jvalue(mrb, env, rb_argv[i], jvals[i], types[i]);
+		convert_mrb_value_to_jvalue(mrb,getEnv(), rb_argv[i], jvals[i], types[i]);
 	}
+	
 
 	jni_type_t const type = jmethod_get_return_type(mrb, jmthd);
-	jvalue const &ret = call_method(mrb, env, type, data->gref_jclass, jmid, &jvals[0]);
-	return convert_jvalue_to_mrb_value(mrb, env, type, ret);
+	jvalue const &ret = call_method(mrb,getEnv(), type, data->gref_jclass, jmid, &jvals[0]);
+	
+	for (int i=0; i < rb_argc; i++) {
+        switch (mrb_type(rb_argv[i])) {
+		case MRB_TT_STRING: getEnv()->DeleteLocalRef(jvals[i].l);
+		default: break;
+		}
+	}	
+	
+    mrb_value n = convert_jvalue_to_mrb_value(mrb, getEnv(), type, ret);
+	switch(mrb_type(n)) {
+	case MRB_TT_STRING: getEnv()->DeleteLocalRef(ret.l);
+	default: break; 
+    }
+    return n;
 }
 
 mrb_value jcls_call(mrb_state *mrb, mrb_value self)
@@ -132,8 +146,8 @@ mrb_value jcls_call(mrb_state *mrb, mrb_value self)
 		return mrb_nil_value();
 	}
 
-	jclass_data *data = static_cast<jclass_data*>(mrb_get_datatype(mrb, self, &jcls_type));
-	JNIEnv *env = data->env;
+//	jclass_data *data = static_cast<jclass_data*>(mrb_get_datatype(mrb, self, &jcls_type));
+	// JNIEnv *env = getEnv();
 
 	jobject obj = jobject_get_jobject(mrb, jobj);
 	if (NULL == obj) {
@@ -167,12 +181,25 @@ mrb_value jcls_call(mrb_state *mrb, mrb_value self)
 	using namespace org::jamruby;
 
 	for (int i = 0; i < rb_argc; ++i) {
-		convert_mrb_value_to_jvalue(mrb, env, rb_argv[i], jvals[i], types[i]);
+		convert_mrb_value_to_jvalue(mrb,getEnv(), rb_argv[i], jvals[i], types[i]);
 	}
 
 	jni_type_t const type = jmethod_get_return_type(mrb, jmthd);
-	jvalue const &ret = call_method(mrb, env, type, obj, jmid, &jvals[0]); 
-	return convert_jvalue_to_mrb_value(mrb, env, type, ret);
+	jvalue const &ret = call_method(mrb,getEnv(), type, obj, jmid, &jvals[0]); 
+	
+	for (int i=0; i < rb_argc; i++) {
+        switch (mrb_type(rb_argv[i])) {
+		case MRB_TT_STRING: getEnv()->DeleteLocalRef(jvals[i].l);
+		default: break;
+		}
+	}
+	
+    mrb_value n = convert_jvalue_to_mrb_value(mrb, getEnv(), type, ret);
+	switch(mrb_type(n)) {
+	case MRB_TT_STRING: getEnv()->DeleteLocalRef(ret.l);
+	default: break; 
+    }
+    return n;
 }
 
 static mrb_value jcls_get_method(mrb_state *mrb, mrb_value self)
@@ -183,14 +210,14 @@ static mrb_value jcls_get_method(mrb_state *mrb, mrb_value self)
 		return mrb_nil_value();
 	}
 	jclass_data *data = static_cast<jclass_data*>(mrb_get_datatype(mrb, self, &jcls_type));
-	JNIEnv *env = data->env;
-	safe_jni::clear_exception ce(env);
+	// JNIEnv *env = getEnv();
+	safe_jni::clear_exception ce(getEnv());
 	char const * const sig = mrb_string_value_ptr(mrb, signature);
-	jmethodID jmid = env->GetMethodID(data->gref_jclass, mrb_string_value_ptr(mrb, name), sig);
+	jmethodID jmid = getEnv()->GetMethodID(data->gref_jclass, mrb_string_value_ptr(mrb, name), sig);
 	if (NULL == jmid) {
 		return mrb_nil_value();
 	}
-	return jmethod_make(mrb, env, jmid, sig);
+	return jmethod_make(mrb,getEnv(), jmid, sig);
 }
 
 static mrb_value jcls_get_static_method(mrb_state *mrb, mrb_value self)
@@ -201,22 +228,22 @@ static mrb_value jcls_get_static_method(mrb_state *mrb, mrb_value self)
 		return mrb_nil_value();
 	}
 	jclass_data *data = static_cast<jclass_data*>(mrb_get_datatype(mrb, self, &jcls_type));
-	JNIEnv *env = data->env;
-	safe_jni::clear_exception ce(env);
+	// JNIEnv *env = getEnv();
+	safe_jni::clear_exception ce(getEnv());
 	char const * const sig = mrb_string_value_ptr(mrb, signature);
-	jmethodID jmid = env->GetStaticMethodID(data->gref_jclass, mrb_string_value_ptr(mrb, name), sig);
+	jmethodID jmid = getEnv()->GetStaticMethodID(data->gref_jclass, mrb_string_value_ptr(mrb, name), sig);
 	if (NULL == jmid) {
 		return mrb_nil_value();
 	}
-	return jmethod_make(mrb, env, jmid, sig);
+	return jmethod_make(mrb,getEnv(), jmid, sig);
 }
 
 static mrb_value jcls_get_class_object(mrb_state *mrb, mrb_value self)
 {
 	jclass_data *data = static_cast<jclass_data*>(mrb_get_datatype(mrb, self, &jcls_type));
-	JNIEnv *env = data->env;
-	safe_jni::safe_local_ref<jclass> objCls(env, env->GetObjectClass(data->gref_jclass));
-	return jobject_make(mrb, env, objCls.get());
+	// JNIEnv *env = getEnv();
+	safe_jni::safe_local_ref<jclass> objCls(getEnv(), getEnv()->GetObjectClass(data->gref_jclass));
+	return jobject_make(mrb,getEnv(), objCls.get());
 }
 
 static mrb_value jcls_initialize(mrb_state *mrb, mrb_value self)
@@ -232,12 +259,12 @@ int jcls_init_class(mrb_state *mrb)
 		return -1;
 	}
 	MRB_SET_INSTANCE_TT(cls_jcls, MRB_TT_DATA);
-	mrb_define_method(mrb, cls_jcls, "get_method", jcls_get_method, ARGS_REQ(2));
-	mrb_define_method(mrb, cls_jcls, "get_static_method", jcls_get_static_method, ARGS_REQ(2));
-	mrb_define_method(mrb, cls_jcls, "get_class_object", jcls_get_class_object, ARGS_NONE());
-	mrb_define_method(mrb, cls_jcls, "call_static", jcls_call_static, ARGS_REQ(1));
-	mrb_define_method(mrb, cls_jcls, "call", jcls_call, ARGS_REQ(2));
-	mrb_define_method(mrb, cls_jcls, "initialize", jcls_initialize, ARGS_REQ(1));
+	mrb_define_method(mrb, cls_jcls, "get_method", jcls_get_method, MRB_ARGS_REQ(2));
+	mrb_define_method(mrb, cls_jcls, "get_static_method", jcls_get_static_method, MRB_ARGS_REQ(2));
+	mrb_define_method(mrb, cls_jcls, "get_class_object", jcls_get_class_object, MRB_ARGS_NONE());
+	mrb_define_method(mrb, cls_jcls, "call_static", jcls_call_static, MRB_ARGS_REQ(1));
+	mrb_define_method(mrb, cls_jcls, "call", jcls_call, MRB_ARGS_REQ(2));
+	mrb_define_method(mrb, cls_jcls, "initialize", jcls_initialize, MRB_ARGS_REQ(1));
 	return 0;
 }
 

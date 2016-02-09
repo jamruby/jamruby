@@ -58,9 +58,9 @@ public class Value {
 			break;
 		case MRB_TT_VOIDP:
 			this.ptr = obj;
-			break;
+			break;      
 		default:
-			throw new NotImplementedException(String.format("Unknown value type (%s).", type.toString()));
+			throw new NotImplementedException(String.format("Unknown value type (%s) : %s.", type.toString(), new RObject(obj).toString()));
 		}
 	}
 	

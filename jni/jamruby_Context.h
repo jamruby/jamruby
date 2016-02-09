@@ -6,7 +6,7 @@
 #include <map>
 #include <set>
 #include <string>
-
+#include "jni_load.h"
 namespace org {
 namespace jamruby {
 
@@ -33,7 +33,10 @@ public:
 		}
 		jamruby_context *context = NULL;
 		try {
-			context = new jamruby_context(mrb, env);
+			context = new jamruby_context(mrb, getEnv());
+			JavaVM* ljvm;
+			getEnv()->GetJavaVM(&ljvm);
+			context->jvm = ljvm; 
 			inner_map.insert(map_type::value_type(mrb, context));
 		} catch (std::bad_alloc&) {
 			delete context;
@@ -66,7 +69,7 @@ public:
 		return mrb_;
 	}
 	JNIEnv *get_jni_env() const {
-		return env_;
+		return getEnv();
 	}
 
 	bool register_method_signature(bool is_class_method, struct RClass *target,
@@ -83,6 +86,8 @@ public:
 	bool register_jclass(struct RClass *target, jclass jcls);
 	jclass unregister_jclass(struct RClass *target);
 	jclass find_jclass(struct RClass *target);
+
+    JavaVM* jvm;
 
 private:
 	mrb_state *mrb_;

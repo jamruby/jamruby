@@ -1,4 +1,6 @@
+
 #include "jni_KHashIv.h"
+
 #include "safe_jni.hpp"
 #include "jni_type_conversion.hpp"
 #include "jni_common.hpp"
@@ -8,7 +10,7 @@ extern "C" {
 #include "mruby/variable.h"
 KHASH_DECLARE(iv, mrb_sym, mrb_value, 1);
 }
-
+#define MRBSTATE(mrb) to_ptr<mrb_state>(mrb)
 typedef uint32_t kh_iv_key;
 
 inline kh_iv_key to_key(jlong key) {
@@ -21,10 +23,10 @@ inline kh_iv_key to_key(jlong key) {
  * Signature: (JJ)Z
  */
 JNIEXPORT jboolean JNICALL Java_org_jamruby_mruby_KHashIv_n_1khExist
-  (JNIEnv *env, jclass, jlong kh, jlong key)
+  (JNIEnv *env, jclass, jlong mrb, jlong kh, jlong key)
 {
 	kh_iv * const h = to_ptr<kh_iv>(kh);
-	khint_t k = kh_get(iv, h, to_key(key));
+	khint_t k = kh_get(iv, MRBSTATE(mrb), h, to_key(key));
 	if (k == kh_end(h)) {
 		return JNI_FALSE;
 	}
@@ -41,15 +43,15 @@ JNIEXPORT jboolean JNICALL Java_org_jamruby_mruby_KHashIv_n_1khExist
  * Signature: (JJ)Lorg/jamruby/mruby/Value;
  */
 JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_KHashIv_n_1khGet
-  (JNIEnv *env, jclass, jlong kh, jlong key)
+  (JNIEnv *env, jclass, jlong mrb, jlong kh, jlong key)
 {
 	kh_iv *h = to_ptr<kh_iv>(kh);
-	khint_t k = kh_get(iv, h, to_key(key));
+	khint_t k = kh_get(iv, MRBSTATE(mrb), h, to_key(key));
 	if (k == kh_end(h)) {
 		return NULL;
 	}
 	mrb_value const &ret = kh_value(h, k);
-	safe_jni::safe_local_ref<jobject> result(env, create_value(env, ret));
+	safe_jni::safe_local_ref<jobject> result(getEnv(), create_value(getEnv(), ret));
 	return result.get();
 }
 
@@ -59,16 +61,16 @@ JNIEXPORT jobject JNICALL Java_org_jamruby_mruby_KHashIv_n_1khGet
  * Signature: (JJLorg/jamruby/mruby/Value;)V
  */
 JNIEXPORT void JNICALL Java_org_jamruby_mruby_KHashIv_n_1khPut
-  (JNIEnv *env, jclass, jlong kh, jlong key, jobject value)
+  (JNIEnv *env, jclass, jlong mrb, jlong kh, jlong key, jobject value)
 {
 	kh_iv * const h = to_ptr<kh_iv>(kh);
 	mrb_value val;
-	if (!create_mrb_value(env, value ,val)) {
+	if (!create_mrb_value(getEnv(), value ,val)) {
 		return;
 	}
-	khint_t k = kh_get(iv, h, to_key(key));
+	khint_t k = kh_get(iv, MRBSTATE(mrb), h, to_key(key));
 	if (k == kh_end(h)) {
-		k = kh_put(iv, h, to_key(key));
+		k = kh_put(iv, MRBSTATE(mrb), h, to_key(key));
 	}
 	kh_value(h, k) = val;
 }

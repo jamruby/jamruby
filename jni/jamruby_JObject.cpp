@@ -27,7 +27,7 @@ static void jobject_free(mrb_state *mrb, void *ptr)
 {
     if (NULL != ptr) {
         jobject_data *p = static_cast<jobject_data*>(ptr);
-        p->env->DeleteGlobalRef(p->gref_jobj);
+        getEnv()->DeleteGlobalRef(p->gref_jobj);
         p->env = NULL;
         p->gref_jobj = NULL;
     }
@@ -38,7 +38,7 @@ static struct mrb_data_type jobject_type = { CLASS_NAME, jobject_free };
 
 mrb_value jobject_make(mrb_state *mrb, JNIEnv *env, jobject obj)
 {
-	safe_jni::clear_exception ce(env);
+	safe_jni::clear_exception ce(getEnv());
 	RClass *c = mrb_class_get(mrb, CLASS_NAME);
 	if (NULL == c) {
 		return mrb_nil_value();
@@ -47,8 +47,8 @@ mrb_value jobject_make(mrb_state *mrb, JNIEnv *env, jobject obj)
 	if (NULL == ptr) {
 		return mrb_nil_value();
 	}
-	ptr->env = env;
-	ptr->gref_jobj = env->NewGlobalRef(obj);
+	ptr->env = getEnv();
+	ptr->gref_jobj = getEnv()->NewGlobalRef(obj);
 	return mrb_obj_value(Data_Wrap_Struct(mrb, c, &jobject_type, ptr));
 }
 
@@ -70,38 +70,38 @@ jobject jobject_get_jobject(mrb_state *mrb, mrb_value obj)
 static mrb_value jobject_jclass(mrb_state *mrb, mrb_value self)
 {
 	jobject_data *data = static_cast<jobject_data*>(mrb_get_datatype(mrb, self, &jobject_type));
-	JNIEnv *env = data->env;
-	safe_jni::safe_local_ref<jclass> cls(env, env->GetObjectClass(data->gref_jobj));
-	return jcls_make(mrb, env, cls.get());
+	// JNIEnv *env = getEnv();
+	safe_jni::safe_local_ref<jclass> cls(getEnv(), getEnv()->GetObjectClass(data->gref_jobj));
+	return jcls_make(mrb,getEnv(), cls.get());
 }
 
 static mrb_value jobject_class(mrb_state *mrb, mrb_value self)
 {
 	jobject_data *data = static_cast<jobject_data*>(mrb_get_datatype(mrb, self, &jobject_type));
-	JNIEnv *env = data->env;
+	// JNIEnv *env = getEnv();
 
-	safe_jni::safe_local_ref<jclass> cls(env, env->GetObjectClass(data->gref_jobj));
-	jmethodID jmid = env->GetMethodID(cls.get(), "getClass", "()Ljava/lang/Class;");
+	safe_jni::safe_local_ref<jclass> cls(getEnv(), getEnv()->GetObjectClass(data->gref_jobj));
+	jmethodID jmid = getEnv()->GetMethodID(cls.get(), "getClass", "()Ljava/lang/Class;");
 	if (NULL == jmid) {
 		return mrb_nil_value();
 	}
-	safe_jni::safe_local_ref<jobject> cls_obj(env, env->CallObjectMethod(data->gref_jobj, jmid));
-	return jobject_make(mrb, env, cls_obj.get());
+	safe_jni::safe_local_ref<jobject> cls_obj(getEnv(), getEnv()->CallObjectMethod(data->gref_jobj, jmid));
+	return jobject_make(mrb,getEnv(), cls_obj.get());
 }
 
 static mrb_value jobject_to_s(mrb_state *mrb, mrb_value self)
 {
 	jobject_data *data = static_cast<jobject_data*>(mrb_get_datatype(mrb, self, &jobject_type));
-	JNIEnv *env = data->env;
+	// JNIEnv *env = getEnv();
 
-	safe_jni::safe_local_ref<jclass> cls(env, env->GetObjectClass(data->gref_jobj));
-	jmethodID jmid = env->GetMethodID(cls.get(), "toString", "()Ljava/lang/String;");
+	safe_jni::safe_local_ref<jclass> cls(getEnv(), getEnv()->GetObjectClass(data->gref_jobj));
+	jmethodID jmid = getEnv()->GetMethodID(cls.get(), "toString", "()Ljava/lang/String;");
 	if (NULL == jmid) {
 		return mrb_nil_value();
 	}
 
-	safe_jni::safe_local_ref<jstring> s(env, static_cast<jstring>(env->CallObjectMethod(data->gref_jobj, jmid)));
-	safe_jni::safe_string str(env, s.get());
+	safe_jni::safe_local_ref<jstring> s(getEnv(), static_cast<jstring>(getEnv()->CallObjectMethod(data->gref_jobj, jmid)));
+	safe_jni::safe_string str(getEnv(), s.get());
 
 	return mrb_str_new_cstr(mrb, str.string());
 }
@@ -119,7 +119,7 @@ static mrb_value jobject_initialize(mrb_state *mrb, mrb_value self)
 		mrb_raise(mrb, E_RUNTIME_ERROR, "jamruby context cannot found.");
 	}
 
-	JNIEnv * const env = context->get_jni_env();
+	// JNIEnv * const env = getEnv();
 	mrb_int argc;
 	mrb_value *argv;
 	mrb_get_args(mrb, "*", &argv, &argc);
@@ -139,7 +139,7 @@ static mrb_value jobject_initialize(mrb_state *mrb, mrb_value self)
 	}
 
 	jclass gref_cls = context->find_jclass(mrb_obj_class(mrb, self));
-	jmethodID mid = env->GetMethodID(gref_cls, "<init>", sig.c_str());
+	jmethodID mid = getEnv()->GetMethodID(gref_cls, "<init>", sig.c_str());
 
 	std::vector<jvalue> jvals(argc);
 	std::vector<jni_type_t> types(argc);
@@ -149,13 +149,14 @@ static mrb_value jobject_initialize(mrb_state *mrb, mrb_value self)
 	}
 
 	for (int i = 0; i < argc; ++i) {
-		org::jamruby::convert_mrb_value_to_jvalue(mrb, env, argv[i], jvals[i], types[i]);
+		org::jamruby::convert_mrb_value_to_jvalue(mrb,getEnv(), argv[i], jvals[i], types[i]);
 	}
 
-	jobject obj = org::jamruby::call_ctor(mrb, env, gref_cls, mid, &jvals[0]);
+	jobject obj = org::jamruby::call_ctor(mrb,getEnv(), gref_cls, mid, &jvals[0]);
 
-	data->env = context->get_jni_env();
-	data->gref_jobj = env->NewGlobalRef(obj);
+	data->env = getEnv();
+	data->gref_jobj = getEnv()->NewGlobalRef(obj);
+	getEnv()->DeleteLocalRef(obj);
 	DATA_TYPE(self) = &jobject_type;
 	DATA_PTR(self) = data;
 
@@ -169,10 +170,10 @@ int jobject_init_class(mrb_state *mrb)
 		return -1;
 	}
 	MRB_SET_INSTANCE_TT(cls_jobj, MRB_TT_DATA);
-	mrb_define_method(mrb, cls_jobj, "jclass",     jobject_jclass,     ARGS_NONE());
-	mrb_define_method(mrb, cls_jobj, "class",      jobject_class,      ARGS_NONE());
-	mrb_define_method(mrb, cls_jobj, "to_s",       jobject_to_s,       ARGS_NONE());
-	mrb_define_method(mrb, cls_jobj, "initialize", jobject_initialize, ARGS_ANY());
+	mrb_define_method(mrb, cls_jobj, "jclass",     jobject_jclass,     MRB_ARGS_NONE());
+	mrb_define_method(mrb, cls_jobj, "class",      jobject_class,      MRB_ARGS_NONE());
+	mrb_define_method(mrb, cls_jobj, "to_s",       jobject_to_s,       MRB_ARGS_NONE());
+	mrb_define_method(mrb, cls_jobj, "initialize", jobject_initialize, MRB_ARGS_ANY());
 	return 0;
 }
 

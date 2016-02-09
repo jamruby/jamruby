@@ -1,6 +1,7 @@
 package org.jamruby.mruby;
 
 import org.jamruby.core.Jamruby;
+import android.util.Log;
 
 public class State {
 	private long nativeObj;
@@ -15,6 +16,7 @@ public class State {
 		try {
 			super.finalize();
 		} finally {
+      Log.i("MRB_STATE:", "mrb_close");
 			close();
 		}
 	}
@@ -39,6 +41,7 @@ public class State {
 		return new RObject(n_getExc(nativeObject()));
 	}
 	
+	/*
 	public Irep[] irep() {
 		if (null == ireps) {
 			synchronized(this) {
@@ -48,9 +51,9 @@ public class State {
 			}
 		}
 		return ireps;
-	}
+	}*/
 	
-	private static native Irep[] n_getIreps(long ptr);
+	//private static native Irep[] n_getIreps(long ptr);
 	private static native long n_getExc(long ptr);
 	private static native void n_close(long ptr);
 }

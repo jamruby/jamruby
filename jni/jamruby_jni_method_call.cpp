@@ -2,6 +2,7 @@
 #include "jamruby_JObject.h"
 #include "jni_Log.h"
 #include "jni_type_conversion.hpp"
+
 extern "C" {
 #include "mruby/string.h"
 }
@@ -29,14 +30,14 @@ RClass *get_mruby_error_class(mrb_state *mrb, JNIEnv *env, jthrowable e)
 {
 	RClass *error_class = NULL;
 	{
-		safe_jni::safe_local_ref<jclass> jerror_class(env, env->FindClass("java/lang/Error"));
-		if (JNI_FALSE != env->IsInstanceOf(e, jerror_class.get())) {
+		safe_jni::safe_local_ref<jclass> jerror_class(getEnv(), findClass("java/lang/Error"));
+		if (JNI_FALSE != getEnv()->IsInstanceOf(e, jerror_class.get())) {
 			error_class = mrb_class_get(mrb, "JError");
 		}   
 	}   
 	if (NULL == error_class) {
-		safe_jni::safe_local_ref<jclass> jexception_class(env, env->FindClass("java/lang/Exception"));
-		if (JNI_FALSE != env->IsInstanceOf(e, jexception_class.get())) {
+		safe_jni::safe_local_ref<jclass> jexception_class(getEnv(), findClass("java/lang/Exception"));
+		if (JNI_FALSE != getEnv()->IsInstanceOf(e, jexception_class.get())) {
 			error_class = mrb_class_get(mrb, "JException");
 		}   
 	}   
@@ -48,12 +49,12 @@ RClass *get_mruby_error_class(mrb_state *mrb, JNIEnv *env, jthrowable e)
 
 char *get_message_from_jthrowable(JNIEnv *env, jthrowable e)
 {
-	safe_jni::safe_local_ref<jclass> cls(env, env->GetObjectClass(e));
+	safe_jni::safe_local_ref<jclass> cls(getEnv(), getEnv()->GetObjectClass(e));
 	if (cls.get()) {
-		jmethodID mid = env->GetMethodID(cls.get(), "getMessage", "()Ljava/lang/String;");
+		jmethodID mid = getEnv()->GetMethodID(cls.get(), "getMessage", "()Ljava/lang/String;");
 		if (NULL != mid) {
-			safe_jni::safe_local_ref<jstring> str(env, static_cast<jstring>(env->CallObjectMethod(e, mid)));
-			safe_jni::safe_string msg_str(env, str.get());
+			safe_jni::safe_local_ref<jstring> str(getEnv(), static_cast<jstring>(getEnv()->CallObjectMethod(e, mid)));
+			safe_jni::safe_string msg_str(getEnv(), str.get());
 			return strdup(msg_str.string());
 		}
 	}
@@ -76,14 +77,14 @@ void raise_mruby_error(mrb_state *mrb, char *msg, RClass *error_class)
 
 jobject call_ctor(mrb_state *mrb, JNIEnv *env, jclass jcls, jmethodID jmid, jvalue* args)
 {   
-	jobject new_obj = env->NewObjectA(jcls, jmid, args);
-	safe_jni::safe_local_ref<jthrowable> e(env, env->ExceptionOccurred());
+	jobject new_obj = getEnv()->NewObjectA(jcls, jmid, args);
+	safe_jni::safe_local_ref<jthrowable> e(getEnv(), getEnv()->ExceptionOccurred());
 	if (NULL != e) {
-		env->ExceptionClear();
-		RClass *error_class = get_mruby_error_class(mrb, env, e.get());
-		env->ExceptionClear();
-		char *msg = get_message_from_jthrowable(env, e.get());
-		env->ExceptionClear(); 
+		getEnv()->ExceptionClear();
+		RClass *error_class = get_mruby_error_class(mrb, getEnv(), e.get());
+		getEnv()->ExceptionClear();
+		char *msg = get_message_from_jthrowable(getEnv(), e.get());
+		getEnv()->ExceptionClear(); 
 		raise_mruby_error(mrb, msg, error_class);
 	}
 	return new_obj;
@@ -198,7 +199,7 @@ bool convert_mrb_value_to_jvalue(mrb_state *mrb, JNIEnv *env, mrb_value rval, jv
 		{
 			LOGD("MRB_TT_STRING -> JNI_TYPE_OBJECT");
 			// TODO validate Java object type.
-			jval.l = env->NewStringUTF(mrb_string_value_ptr(mrb, rval));
+			jval.l = getEnv()->NewStringUTF(mrb_string_value_ptr(mrb, rval));
 			break;
 		}
 		default:
@@ -221,7 +222,7 @@ bool convert_mrb_value_to_jvalue(mrb_state *mrb, JNIEnv *env, mrb_value rval, jv
 	default:
 		{
 		LOGD("MRB_TT_XXX -> JNI_TYPE_OBJECT");
-		jval.l = create_value(env, rval);
+		jval.l = create_value(getEnv(), rval);
 		}
 		break;
 	}
@@ -231,8 +232,8 @@ bool convert_mrb_value_to_jvalue(mrb_state *mrb, JNIEnv *env, mrb_value rval, jv
 mrb_value convert_jvalue_to_mrb_value(mrb_state *mrb, JNIEnv *env, jni_type_t const &type, jvalue const &ret)
 {
 	if (type.is_array()) {
-		safe_jni::safe_local_ref<jobject> retval(env, ret.l);
-		return (NULL == ret.l) ? mrb_nil_value() : jobject_make(mrb, env, retval.get());
+		safe_jni::safe_local_ref<jobject> retval(getEnv(), ret.l);
+		return (NULL == ret.l) ? mrb_nil_value() : jobject_make(mrb, getEnv(), retval.get());
 	} else {
 		switch(type.type_id()) {
 		case JNI_TYPE_VOID:
@@ -267,9 +268,9 @@ mrb_value convert_jvalue_to_mrb_value(mrb_state *mrb, JNIEnv *env, jni_type_t co
 
 			j2m_converter_map_t::const_iterator it = j2m_converters.find(name);
 			if (it == j2m_converters.end()) {
-				return Object_to_mrb(mrb, env, ret.l, name);
+				return Object_to_mrb(mrb, getEnv(), ret.l, name);
 			} else {
-				return it->second(mrb, env, ret.l, name);
+				return it->second(mrb, getEnv(), ret.l, name);
 			}
 		}
 		default:
@@ -509,14 +510,18 @@ bool is_mrb_value_convertible_to(mrb_state *mrb, mrb_value value, jni_type_t con
 		}
 		if (type.name() == "java/lang/String") {
 			return true;
-		}
+		}	
+		
+		if (type.name() == "java/lang/CharSequence") {
+			return true;
+		}				
 		return false;
 	case MRB_TT_DATA:
 	case MRB_TT_OBJECT:
 		if (JNI_TYPE_OBJECT != type.type_id()) {
 			return false;
 		}
-		if (!jobject_is_jobject(mrb, value)) {
+		if (jobject_is_jobject(mrb, value)) {
 			return true;
 		}
 		return false;
@@ -527,31 +532,31 @@ bool is_mrb_value_convertible_to(mrb_state *mrb, mrb_value value, jni_type_t con
 
 static mrb_value Boolean_to_mrb(mrb_state *mrb, JNIEnv *env, jobject value, std::string const &type_name)
 {
-	safe_jni::method<bool> boolean_value(env, value, "booleanValue", "()Z");
+	safe_jni::method<bool> boolean_value(getEnv(), value, "booleanValue", "()Z");
 	return boolean_value(value) ? mrb_true_value() : mrb_false_value();
 }
 
 static mrb_value Character_to_mrb(mrb_state *mrb, JNIEnv *env, jobject value, std::string const &type_name)
 {
-	safe_jni::method<uint16_t> char_value(env, value, "charValue", "()C");
+	safe_jni::method<uint16_t> char_value(getEnv(), value, "charValue", "()C");
 	return mrb_fixnum_value(char_value(value));
 }
 
 static mrb_value Byte_to_mrb(mrb_state *mrb, JNIEnv *env, jobject value, std::string const &type_name)
 {
-	safe_jni::method<int8_t> int_value(env, value, "intValue", "()I");
+	safe_jni::method<int8_t> int_value(getEnv(), value, "intValue", "()I");
 	return mrb_fixnum_value(int_value(value));
 }
 
 static mrb_value Short_to_mrb(mrb_state *mrb, JNIEnv *env, jobject value, std::string const &type_name)
 {
-	safe_jni::method<int16_t> int_value(env, value, "intValue", "()I");
+	safe_jni::method<int16_t> int_value(getEnv(), value, "intValue", "()I");
 	return mrb_fixnum_value(int_value(value));
 }
 
 static mrb_value Integer_to_mrb(mrb_state *mrb, JNIEnv *env, jobject value, std::string const &type_name)
 {
-	safe_jni::method<int32_t> int_value(env, value, "intValue", "()I");
+	safe_jni::method<int32_t> int_value(getEnv(), value, "intValue", "()I");
 	return mrb_fixnum_value(int_value(value));
 }
 
@@ -563,7 +568,7 @@ static mrb_value Long_to_mrb(mrb_state *mrb, JNIEnv *env, jobject value, std::st
 
 static mrb_value Double_to_mrb(mrb_state *mrb, JNIEnv *env, jobject value, std::string const &type_name)
 {
-	safe_jni::method<double> double_value(env, value, "doubleValue", "()D");
+	safe_jni::method<double> double_value(getEnv(), value, "doubleValue", "()D");
 #ifdef MRB_USE_FLOAT
 	return mrb_float_value(mrb, (float)double_value(value));
 #else
@@ -573,19 +578,19 @@ static mrb_value Double_to_mrb(mrb_state *mrb, JNIEnv *env, jobject value, std::
 
 static mrb_value Float_to_mrb(mrb_state *mrb, JNIEnv *env, jobject value, std::string const &type_name)
 {
-	safe_jni::method<float> float_value(env, value, "floatValue", "()F");
+	safe_jni::method<float> float_value(getEnv(), value, "floatValue", "()F");
 	return mrb_float_value(mrb, float_value(value));
 }
 
 static mrb_value Object_to_mrb(mrb_state *mrb, JNIEnv *env, jobject value, std::string const &type_name)
 {
-	safe_jni::safe_local_ref<jobject> retval(env, value);
-	return (NULL == value) ? mrb_nil_value() : jobject_make(mrb, env, retval.get());
+	safe_jni::safe_local_ref<jobject> retval(getEnv(), value);
+	return (NULL == value) ? mrb_nil_value() : jobject_make(mrb, getEnv(), retval.get());
 }
 
 static mrb_value String_to_mrb(mrb_state *mrb, JNIEnv *env, jobject value, std::string const &type_name)
 {
-	safe_jni::safe_string str(env, static_cast<jstring>(value));
+	safe_jni::safe_string str(getEnv(), static_cast<jstring>(value));
 	return mrb_str_new_cstr(mrb, str.string());
 }
 

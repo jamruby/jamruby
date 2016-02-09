@@ -33,7 +33,7 @@ public class MethodSignature {
 		if (TYPE_SIGNATURE_MAP.containsKey(retType)) {
 			builder.append(TYPE_SIGNATURE_MAP.get(retType));
 		} else {
-			builder.append(genSignature(retType.getCanonicalName()));
+			builder.append(genSignature(retType.getName()));
 		}
 		return builder.toString();
 	}
@@ -57,7 +57,7 @@ public class MethodSignature {
 			if (TYPE_SIGNATURE_MAP.containsKey(pt)) {
 				builder.append(TYPE_SIGNATURE_MAP.get(pt));
 			} else {
-				builder.append(genSignature(pt.getCanonicalName()));
+				builder.append(genSignature(pt.getName()));
 			}
 		}
 		return builder.toString();

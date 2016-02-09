@@ -1,4 +1,5 @@
 #include "jni_State.h"
+#include "jni_load.h"
 extern "C" {
 #include "mruby.h"
 }
@@ -9,31 +10,32 @@ extern "C" {
  * Class:     org_jamruby_mruby_State
  * Method:    n_getIreps
  * Signature: (J)[Lorg/jamruby/mruby/Irep;
- */
+ 
 JNIEXPORT jobjectArray JNICALL Java_org_jamruby_mruby_State_n_1getIreps
   (JNIEnv *env, jclass clazz, jlong mrb)
 {
 	mrb_state* s = reinterpret_cast<mrb_state*>(static_cast<intptr_t>(mrb));
 	size_t const len = s->irep_len;
-	safe_jni::safe_local_ref<jclass> irep_clazz(env, env->FindClass("org/jamruby/mruby/Irep"));
+	safe_jni::safe_local_ref<jclass> irep_clazz(getEnv(), findClass("org/jamruby/mruby/Irep"));
 	if (!irep_clazz) {
 		return NULL;
 	}
-	safe_jni::safe_local_ref<jobjectArray> array(env, env->NewObjectArray(len, irep_clazz.get(), NULL));
+	safe_jni::safe_local_ref<jobjectArray> array(getEnv(), getEnv()->NewObjectArray(len, irep_clazz.get(), NULL));
 	if (!array) {
 		return NULL;
 	}
-	jmethodID ctor = env->GetMethodID(irep_clazz.get(), "<init>", "(J)V");
+	jmethodID ctor = getEnv()->GetMethodID(irep_clazz.get(), "<init>", "(J)V");
 	for (size_t i = 0; i < len; ++i) {
-		safe_jni::safe_local_ref<jobject> elem(env, env->NewObject(irep_clazz.get(), ctor, static_cast<jlong>(reinterpret_cast<intptr_t>(s->irep[i]))));
+		safe_jni::safe_local_ref<jobject> elem(getEnv(), getEnv()->NewObject(irep_clazz.get(), ctor, static_cast<jlong>(reinterpret_cast<intptr_t>(s->irep[i]))));
 		if (!elem) {
 			break;
 		}
-		env->SetObjectArrayElement(array.get(), i, elem.get());
+		getEnv()->SetObjectArrayElement(array.get(), i, elem.get());
 	}
 	return array.get();
 }
-
+*/
+ 
 /*
  * Class:     org_jamruby_mruby_State
  * Method:    n_getExc
@@ -57,4 +59,6 @@ JNIEXPORT void JNICALL Java_org_jamruby_mruby_State_n_1close
 	mrb_close(reinterpret_cast<mrb_state*>(static_cast<intptr_t>(mrb)));
 	fflush(0);
 }
+
+
 

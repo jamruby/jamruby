@@ -2,6 +2,7 @@
 #define JAMRUBY_JCLASS_H
 
 #include <jni.h>
+#include "jni_load.h"
 extern "C" {
 #include "mruby.h"
 }

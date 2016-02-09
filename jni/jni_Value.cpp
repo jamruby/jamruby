@@ -1,5 +1,6 @@
 #include "jni_Value.h"
 #include "jni_type_conversion.hpp"
+#include "jni_load.h"
 extern "C" {
 #include "mruby.h"
 }
@@ -13,7 +14,7 @@ JNIEXPORT jint JNICALL Java_org_jamruby_mruby_Value_n_1obj_1id
   (JNIEnv *env, jobject obj)
 {
 	mrb_value obj_val;
-	if (!create_mrb_value(env, obj, obj_val)) {
+	if (!create_mrb_value(getEnv(), obj, obj_val)) {
 		// MEMO invalid object id is undefined.
 		return 0;
 	}

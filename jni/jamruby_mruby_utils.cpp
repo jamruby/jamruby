@@ -17,9 +17,9 @@ RClass *get_called_mrb_class(mrb_state *mrb)
 
 RProc *replace_mrb_func(mrb_state *mrb, RClass *klass, char const * const name, mrb_func_t func)
 {
-	mrb_sym const mid = mrb_intern(mrb, name);
+	mrb_sym const mid = mrb_intern_cstr(mrb, name);
 	khash_t(mt) * const h = klass->mt;
-	khiter_t k = kh_get(mt, h, mid);
+	khiter_t k = kh_get(mt, mrb, h, mid);
 	if ((k != kh_end(h)) && kh_exist(h, k)) {
 		RProc * const proc = kh_value(h, k);
 		if (NULL != proc) {

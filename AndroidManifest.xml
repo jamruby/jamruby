@@ -3,5 +3,5 @@
     package="org.jamruby"
     android:versionCode="1"
     android:versionName="0.1" >
-    <uses-sdk android:minSdkVersion="4" android:targetSdkVersion=""/>
+    <uses-sdk android:minSdkVersion="11" android:targetSdkVersion="11"/>
 </manifest>

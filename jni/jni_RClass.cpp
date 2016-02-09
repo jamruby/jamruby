@@ -84,10 +84,10 @@ JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_RClass_n_1vmDefineClass
   (JNIEnv *env, jclass, jlong mrb, jobject outerClass, jobject superClass, jlong mid)
 {
 	mrb_value outer_val, super_val;
-	if (!create_mrb_value(env, outerClass, outer_val)) {
+	if (!create_mrb_value(getEnv(), outerClass, outer_val)) {
 		return to_jlong(NULL);
 	}
-	if (!create_mrb_value(env, superClass, super_val)) {
+	if (!create_mrb_value(getEnv(), superClass, super_val)) {
 		return to_jlong(NULL);
 	}
 	RClass * const c = mrb_vm_define_class(to_ptr<mrb_state>(mrb), outer_val, super_val, static_cast<mrb_sym>(mid));
@@ -103,7 +103,7 @@ JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_RClass_n_1vmDefineModule
   (JNIEnv *env, jclass, jlong mrb, jobject outerClass, jlong mid)
 {
 	mrb_value outer_val;
-	if (!create_mrb_value(env, outerClass, outer_val)) {
+	if (!create_mrb_value(getEnv(), outerClass, outer_val)) {
 		return to_jlong(NULL);
 	}
 	RClass * const c = mrb_vm_define_module(to_ptr<mrb_state>(mrb), outer_val, static_cast<mrb_sym>(mid));
@@ -114,16 +114,17 @@ JNIEXPORT jlong JNICALL Java_org_jamruby_mruby_RClass_n_1vmDefineModule
  * Class:     org_jamruby_mruby_RClass
  * Method:    n_defineMethodVm
  * Signature: (JJJLorg/jamruby/mruby/Value;)V
- */
+
 JNIEXPORT void JNICALL Java_org_jamruby_mruby_RClass_n_1defineMethodVm
   (JNIEnv *env, jclass, jlong mrb, jlong c, jlong mid, jobject body)
 {
 	mrb_value body_val;
-	if (!create_mrb_value(env, body, body_val)) {
+	if (!create_mrb_value(getEnv(), body, body_val)) {
 		return;
 	}
 	mrb_define_method_vm(to_ptr<mrb_state>(mrb), to_ptr<RClass>(c), static_cast<mrb_sym>(mid), body_val);
 }
+*/
 
 /*
  * Class:     org_jamruby_mruby_RClass
@@ -169,7 +170,7 @@ JNIEXPORT jboolean JNICALL Java_org_jamruby_mruby_RClass_n_1respondTo
   (JNIEnv *env, jclass, jlong mrb, jobject obj, jlong mid)
 {
 	mrb_value obj_val;
-	if (!create_mrb_value(env, obj, obj_val)) {
+	if (!create_mrb_value(getEnv(), obj, obj_val)) {
 		return JNI_FALSE;
 	}
 	int const &ret = mrb_respond_to(to_ptr<mrb_state>(mrb), obj_val, static_cast<mrb_sym>(mid));
@@ -185,7 +186,7 @@ JNIEXPORT jboolean JNICALL Java_org_jamruby_mruby_RClass_n_1objIsInstanceOf
   (JNIEnv *env, jclass, jlong mrb, jobject obj, jlong c)
 {
 	mrb_value obj_val;
-	if (!create_mrb_value(env, obj, obj_val)) {
+	if (!create_mrb_value(getEnv(), obj, obj_val)) {
 		return JNI_FALSE;
 	}
 	int const &ret = mrb_obj_is_instance_of(to_ptr<mrb_state>(mrb), obj_val, to_ptr<RClass>(c));

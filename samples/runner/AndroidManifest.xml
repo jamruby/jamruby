@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      package="org.jamruby.runner"
+      android:versionCode="1"
+      android:versionName="1.0">
+    
+    <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="8"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    
+    <application android:label="@string/app_name" 
+                 android:debuggable="true"
+                 android:icon="@drawable/ic_launcher">
+      
+        <activity android:name="RunnerActivity"
+                  android:theme="@android:style/Theme.Black.NoTitleBar"
+                  android:label="@string/app_name" android:configChanges="keyboardHidden|orientation|screenSize"
+                  android:process="org.jamruby.runner.main">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        
+        <activity android:name="SpawnedActivity"
+                  android:theme="@android:style/Theme.Black.NoTitleBar"
+                  android:label="@string/app_name" android:configChanges="keyboardHidden|orientation|screenSize"
+                  android:taskAffinity="org.jamruby.runner.SpawnedActivity"
+                  android:process=":org.jamruby.runner.spawned">
+            <intent-filter>
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity> 
+        
+        <activity android:name="SpawnedCompiledActivity"
+                  android:theme="@android:style/Theme.Black.NoTitleBar"
+                  android:label="@string/app_name" android:configChanges="keyboardHidden|orientation|screenSize"
+                  android:taskAffinity="org.jamruby.runner.SpawnedCompiledActivity"
+                  android:process=":org.jamruby.runner.spawned_compiled">
+            <intent-filter>
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>          
+    </application>
+</manifest>

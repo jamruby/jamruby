@@ -16,6 +16,14 @@ public class GC {
 	public static void restoreArena(State state, int arena) {
 		n_gc_arena_restore(state.nativeObject(), arena);
 	}
+  
+	public static int saveArena(long state) {
+		return n_gc_arena_save(state);
+	}
+	
+	public static void restoreArena(long state, int arena) {
+		n_gc_arena_restore(state, arena);
+	}  
 	
 	public static void mark(State state, RObject obj) {
 		n_gc_mark(state.nativeObject(), obj.nativeObject());

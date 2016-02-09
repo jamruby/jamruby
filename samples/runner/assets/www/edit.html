@@ -1,0 +1,48 @@
+<html>
+  <script src='cm/lib/codemirror.js'>
+  </script>
+  
+  <script>
+    function loadFile(path) {
+      console.log(path);
+      buff = ruby.dispatch_argv("read_file", path);
+      cm.getDoc().setValue(eval("("+buff+")"));
+    }
+    
+    function save(path) {
+      ruby.dispatch_argv('write', JSON.stringify([path, cm.getValue()]));
+    } 
+    
+    function run() {
+      ruby.dispatch('run');
+    } 
+    
+    function undo() {
+      cm.undo();
+    } 
+    
+    function redo() {
+      cm.redo();
+    }    
+  </script>
+  
+  <link rel="stylesheet" href="cm/lib/codemirror.css">
+  <style>
+    .CodeMirror { 
+      height: 100%;
+    }
+  </style>
+  <script src='cm/mode/ruby/ruby.js'>
+  </script>
+  
+  <body style='min-height:100%;height:100%;'>
+    <textarea id=edit style='width:100%;height:100%;white-space:pre;word-wrap:normal;'>
+    </textarea>
+  
+    <script>
+      var cm=CodeMirror.fromTextArea(document.getElementById('edit'),{lineNumbers:true});
+      ruby.dispatch("on_ready");
+    </script>
+  </body>
+</html>
+    
