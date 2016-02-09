@@ -61,7 +61,7 @@ module JamRuby
       
       if bool
         # define the java name
-        self.class.add_method nm.to_s, false
+        self.class.add_method(nm.to_s, false)
       
         # define the ruby styled name
         self.class.define_method m do |*o, &b|
@@ -197,7 +197,10 @@ module JamRuby
     end
     
     def initialize obj
-      @native = obj 
+      @native = obj
+      if is_a?("android.view.View")
+        include NativeView
+      end
     end
     
     def native
@@ -226,10 +229,9 @@ module JamRuby
       sig = (static ? self::WRAP::STATIC_SIGNATURES : self::WRAP::SIGNATURES)[name.to_s]
       
       if sig
-        @p ||= NativeWrapper.as(JAVA::Java::Util::Regex::Pattern.compile("\\Q)\\EL(.*?)\;$"), JAVA::Java::Util::Regex::Pattern)
-        m = NativeWrapper.as(@p.matcher(sig), JAVA::Java::Util::Regex::Matcher);
-        if m.find
-          path = m.group[2..-2]
+        p [:POP, (rt=sig.split(")").pop)[0..0]]
+        if (rt=sig.split(")").pop)[0..0] == "L"
+          path = rt[1..-2]
           case path
           when "java/lang/Object"
           when "java/lang/String"
@@ -239,8 +241,6 @@ module JamRuby
         else
           as = nil
         end
-        
-        m.reset
       end  
       
       return [sig, as]  
@@ -259,7 +259,9 @@ module JamRuby
     
     def self.add_method name, static = false
       this = self
-
+      
+      return if (sig_map = this.sigs[static ? :static : :instance][name]) and sig_map[1] and sig_map[1] == this.get_signature(name, static)[1]
+      
       (static ? singleton_class : self).define_method name do |*o, &b|
         unless this.sigs[static ? :static : :instance][name]
           a = []
@@ -382,10 +384,11 @@ module JamRuby
           
           if type.qualified
             pc = JamRuby::Proxy.for(type.name.gsub("/", "."))
-            pxy = pc.new(&b)
+            pxy = pc.new(&q)
             next pxy.native
           else
-            raise ArgumentError.new("Cannot resolve class path for arg #{i}")
+            c = JamRuby::Runnable.new(&q)
+            next c.native
           end                
         else
           q

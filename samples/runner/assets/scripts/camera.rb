@@ -27,7 +27,14 @@ class Main < JamRuby::Activity
     Dir.mkdir(@out_dir) unless Dir.exist?(@out_dir)
   
     @surface_view = Android::View::SurfaceView.new(self)
-    @surface_view.set_on_click_listener{|v| take_picture}
+    
+    @surface_view.set_on_click_listener do |v|
+      camera = @holder_callback.camera
+      
+      camera.auto_focus do |success, cam|
+        take_picture camera
+      end
+    end
     
     @holder_callback = MySurfaceHolderCallback.new
     
@@ -44,8 +51,7 @@ class Main < JamRuby::Activity
     @picture_id += 1
   end
 
-  def take_picture
-    camera = @holder_callback.camera
+  def take_picture(camera)
     return unless camera
 
     picture_file = "#{@out_dir}/img_#{picture_id}.jpg"
@@ -59,9 +65,9 @@ class Main < JamRuby::Activity
         
         toast "Wrote to: #{picture_file}"
         
-        @surface_view.postDelayed(JamRuby::Runnable.new do
+        @surface_view.post_delayed(1000) do
           camera.startPreview
-        end, 1000)  
+        end
       rescue => e
         toast "#{e}"
       end
